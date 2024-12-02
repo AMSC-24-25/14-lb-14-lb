@@ -1,52 +1,71 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include <memory>
-#include <string>
 
-#include "LBM.h"
 #include "seconds.h"
-
-using namespace std;
-
-void report_flow_properties(unsigned int t, vector<double> rho, vector<double> ux, vector<double> uy);
+#include "LBM.h"
 
 int main(int argc, char* argv[])
 {
-    vector<double> f0;
-    vector<double> f1;
-    vector<double> f2;
-    vector<double> rho;
-    vector<double> ux;
-    vector<double> uy;
-
-    try {
-        f0.reserve(size0);
-        f1.reserve(size1);
-        f2.reserve(size1);
-        rho.reserve(size0);
-        ux.reserve(size0);
-        uy.reserve(size0);
-    } catch (const std::bad_alloc& e) {
-        std::cerr << "Memory allocation failed: " << e.what() << std::endl;
-        exit(-1);
-    }
-
+    printf("Simulating Taylor-Green vortex decay\n");
+    printf("      domain size: %ux%u\n",NX,NY);
+    printf("               nu: %g\n",nu);
+    printf("              tau: %g\n",tau);
+    printf("            u_max: %g\n",u_max);
+    printf("             rho0: %g\n",rho0);
+    printf("        timesteps: %u\n",NSTEPS);
+    printf("       save every: %u\n",NSAVE);
+    printf("    message every: %u\n",NMSG);
+    printf("\n");
+    
     double bytesPerMiB = 1024.0*1024.0;
     double bytesPerGiB = 1024.0*1024.0*1024.0;
     
+    double *f0  = (double*) malloc(mem_size_0dir);
+    double *f1  = (double*) malloc(mem_size_n0dir);
+    double *f2  = (double*) malloc(mem_size_n0dir);
+    double *rho = (double*) malloc(mem_size_scalar);
+    double *ux  = (double*) malloc(mem_size_scalar);
+    double *uy  = (double*) malloc(mem_size_scalar);
     
-    // compute flow at t=0 
+    size_t total_mem_bytes = mem_size_0dir + 2*mem_size_n0dir + 3*mem_size_scalar;
+    
+    if(f0 == NULL || f1 == NULL || f2 == NULL || rho == NULL || ux == NULL || uy == NULL)
+    {
+        fprintf(stderr,"Error: unable to allocate required memory (%.1f MiB).\n",total_mem_bytes/bytesPerMiB);
+        exit(-1);
+    }
+    
+    // compute lid-driven cavity flow at t=0 
     // to initialise rho, ux, uy fields.
-    //Initialization function not written yet
+    lid_driven_cavity(rho, ux, uy);
     
     // initialise f1 as equilibrium for rho, ux, uy
     init_equilibrium(f0,f1,rho,ux,uy);
-    
-    save_scalar("rho", rho, 0);
-    save_scalar("ux", ux, 0);
-    save_scalar("uy", uy, 0);
 
+    // Name of CSV
+    const char *csv_filename = "simulation_data.csv";
+
+    // Write head of CSV
+    FILE *csv_file = fopen(csv_filename, "w");
+    if (csv_file != NULL)
+    {
+        fprintf(csv_file, "Timestep,X,Y,Density,Velocity_U,Velocity_V\n");
+        fclose(csv_file);
+    }
+    else
+    {
+        fprintf(stderr, "Errore nell'apertura del file CSV %s\n", csv_filename);
+    }
+
+    // Save data in CSV file
+    save_to_csv(csv_filename, 0, rho, ux, uy);
+    
+
+    if(computeFlowProperties)
+    {
+        report_flow_properties(0,rho,ux,uy);
+    }
+    
     double start = seconds();
     
     // main simulation loop; take NSTEPS time steps
@@ -59,29 +78,34 @@ int main(int argc, char* argv[])
         // stream and collide from f1 storing to f2
         // optionally compute and save moments
         stream_collide_save(f0,f1,f2,rho,ux,uy,need_scalars);
+
+        // Apply boundary conditions
+        apply_bounce_back(f2);
+        apply_lid_boundary(f2, rho, u_max);
+
         
         if(save)
         {
-            save_scalar("rho",rho,n+1);
-            save_scalar("ux", ux, n+1);
-            save_scalar("uy", uy, n+1);
+            // Save data in CSV file
+            save_to_csv(csv_filename, n + 1, rho, ux, uy);
         }
         
-        // swap pointers
-        f1.swap(f2);
+        // swap pointerss
+        double *temp = f1;
+        f1 = f2;
+        f2 = temp;
         
         if(msg)
         {
             if(computeFlowProperties)
             {
-                report_flow_properties(n+1, rho, ux, uy);
+                report_flow_properties(n+1,rho,ux,uy);
             }
             
             if(!quiet)
                 printf("completed timestep %d\n",n+1);
         }
     }
-
     double end = seconds();
     double runtime = end-start;
 
@@ -103,13 +127,10 @@ int main(int argc, char* argv[])
     printf("            speed: %.2f (Mlups)\n",speed);
     printf("        bandwidth: %.1f (GiB/s)\n",bandwidth);
     
+    // deallocate memory
+    free(f0);  free(f1); free(f2);
+    free(rho); free(ux); free(uy);
+    
     return 0;
 }
 
-void report_flow_properties(unsigned int t, vector<double> rho, vector<double> ux, vector<double> uy)
-{
-    vector<double> prop;
-    prop.reserve(4);
-    compute_flow_properties(t,rho,ux,uy,prop);
-    printf("%u,%g,%g,%g,%g\n",t,prop[0],prop[1],prop[2],prop[3]);
-}
