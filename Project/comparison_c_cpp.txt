@@ -1,0 +1,37 @@
+
+C:
+Simulating Taylor-Green vortex decay
+      domain size: 2048x2048
+               nu: 0.166667
+              tau: 1
+            u_max: 0.02
+             rho0: 1
+        timesteps: 4000
+       save every: 200
+    message every: 200
+
+ ----- performance information -----
+ memory allocated: 640.0 (MiB)
+        timesteps: 4000
+          runtime: 178.220 (s)
+            speed: 94.14 (Mlups)
+        bandwidth: 12.6 (GiB/s)
+
+CPP with vectors
+Simulating Taylor-Green vortex decay
+      domain size: 2048x2048
+               nu: 0.166667
+              tau: 1
+            u_max: 0.02
+             rho0: 1
+        timesteps: 4000
+       save every: 200
+    message every: 200
+
+ ----- performance information -----
+ memory allocated: 640.0 (MiB)
+        timesteps: 4000
+          runtime: 581.594 (s)
+            speed: 28.85 (Mlups)
+        bandwidth: 3.9 (GiB/s)
+

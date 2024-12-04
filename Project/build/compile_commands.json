@@ -1,0 +1,20 @@
+[
+{
+  "directory": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build",
+  "command": "/usr/bin/g++ -g -o CMakeFiles/Project.dir/main.cpp.o -c /home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/main.cpp",
+  "file": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/main.cpp",
+  "output": "CMakeFiles/Project.dir/main.cpp.o"
+},
+{
+  "directory": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build",
+  "command": "/usr/bin/g++ -g -o CMakeFiles/Project.dir/LBM.cpp.o -c /home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/LBM.cpp",
+  "file": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/LBM.cpp",
+  "output": "CMakeFiles/Project.dir/LBM.cpp.o"
+},
+{
+  "directory": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build",
+  "command": "/usr/bin/g++ -g -o CMakeFiles/Project.dir/seconds.cpp.o -c /home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/seconds.cpp",
+  "file": "/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/seconds.cpp",
+  "output": "CMakeFiles/Project.dir/seconds.cpp.o"
+}
+]

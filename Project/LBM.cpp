@@ -13,10 +13,10 @@
 #include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-
+#include<vector>
 #include "LBM.h"
 
-void lid_driven_cavity(double *r, double *u, double *v)
+void lid_driven_cavity(std::vector<double> &r, std::vector<double> &u, std::vector<double> &v)
 {
     for (unsigned int y = 0; y < NY; ++y)
     {
@@ -41,7 +41,7 @@ void lid_driven_cavity(double *r, double *u, double *v)
 }
 
 
-void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
+void init_equilibrium(std::vector<double>&f0, std::vector<double>&f1, std::vector<double> &r, std::vector<double> &u, std::vector<double>&v)
 {
     for(unsigned int y = 0; y < NY; ++y)
     {
@@ -83,7 +83,7 @@ void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
     }
 }
 
-void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *u, double *v, bool save)
+void stream_collide_save(std::vector<double>&f0, std::vector<double>&f1, std::vector<double>&f2, std::vector<double>&r, std::vector<double> &u, std::vector<double>&v, bool save)
 {
     // useful constants
     const double tauinv = 2.0/(6.0*nu+1.0); // 1/tau
@@ -162,7 +162,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
 }
 
 ///////////////////////CHECK THIS!!!!!!!!!!!!!!!!!!!/////////////////////////
-void compute_flow_properties(unsigned int t, double *r, double *u, double *v, double *prop)
+void compute_flow_properties(unsigned int t, std::vector<double>&r, std::vector<double> &u, std::vector<double> &v, std::vector<double> &prop)
 {
     // prop must point to space for 4 doubles:
     // 0: energy
@@ -208,9 +208,9 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
     prop[3] = sqrt(sumuye2/sumuya2);
 }
 
-void report_flow_properties(unsigned int t, double *rho, double *ux, double *uy)
+void report_flow_properties(unsigned int t, std::vector<double>&rho, std::vector<double> &ux, std::vector<double> &uy)
 {
-    double prop[4];
+    std::vector<double> prop(4);
     compute_flow_properties(t,rho,ux,uy,prop);
     printf("%u,%g,%g,%g,%g\n",t,prop[0],prop[1],prop[2],prop[3]);
 }
@@ -251,7 +251,7 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
 }
 
 
-void apply_bounce_back(double *f1)
+void apply_bounce_back(std::vector<double>&f1)
 {
     // Boundary conditions for the bottom, right and left walls
     for (unsigned int y = 0; y < NY; ++y)
@@ -280,7 +280,7 @@ void apply_bounce_back(double *f1)
 }
 
 
-void apply_lid_boundary(double *f1, double *rho, double u_lid)
+void apply_lid_boundary(std::vector<double>&f1, std::vector<double>&rho, double u_lid)
 {
     unsigned int y = NY - 1; // Top lid
 
@@ -300,7 +300,7 @@ void apply_lid_boundary(double *f1, double *rho, double u_lid)
     }
 }
 
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy)
+void save_to_csv(const char* filename, unsigned int t, std::vector<double>&rho, std::vector<double> &ux, std::vector<double> &uy)
 {
     FILE *csv_file = fopen(filename, "a");
     if (csv_file == NULL)

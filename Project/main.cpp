@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include<vector>
 #include "seconds.h"
 #include "LBM.h"
 
@@ -20,20 +20,15 @@ int main(int argc, char* argv[])
     double bytesPerMiB = 1024.0*1024.0;
     double bytesPerGiB = 1024.0*1024.0*1024.0;
     
-    double *f0  = (double*) malloc(mem_size_0dir);
-    double *f1  = (double*) malloc(mem_size_n0dir);
-    double *f2  = (double*) malloc(mem_size_n0dir);
-    double *rho = (double*) malloc(mem_size_scalar);
-    double *ux  = (double*) malloc(mem_size_scalar);
-    double *uy  = (double*) malloc(mem_size_scalar);
+    std::vector<double> f0  (mem_size_0dir);
+    std::vector<double> f1  (mem_size_n0dir);
+    std::vector<double> f2  (mem_size_n0dir);
+    std::vector<double> rho (mem_size_scalar);
+    std::vector<double> ux  (mem_size_scalar);
+    std::vector<double> uy  (mem_size_scalar);
     
     size_t total_mem_bytes = mem_size_0dir + 2*mem_size_n0dir + 3*mem_size_scalar;
     
-    if(f0 == NULL || f1 == NULL || f2 == NULL || rho == NULL || ux == NULL || uy == NULL)
-    {
-        fprintf(stderr,"Error: unable to allocate required memory (%.1f MiB).\n",total_mem_bytes/bytesPerMiB);
-        exit(-1);
-    }
     
     // compute lid-driven cavity flow at t=0 
     // to initialise rho, ux, uy fields.
@@ -58,7 +53,7 @@ int main(int argc, char* argv[])
     }
 
     // Save data in CSV file
-    save_to_csv(csv_filename, 0, rho, ux, uy);
+    //save_to_csv(csv_filename, 0, rho, ux, uy);
     
 
     if(computeFlowProperties)
@@ -87,14 +82,12 @@ int main(int argc, char* argv[])
         if(save)
         {
             // Save data in CSV file
-            save_to_csv(csv_filename, n + 1, rho, ux, uy);
+            //save_to_csv(csv_filename, n + 1, rho, ux, uy);
         }
         
         // swap pointerss
-        double *temp = f1;
-        f1 = f2;
-        f2 = temp;
-        
+        std::swap(f1,f2);
+
         if(msg)
         {
             if(computeFlowProperties)
@@ -126,10 +119,6 @@ int main(int argc, char* argv[])
     printf("          runtime: %.3f (s)\n",runtime);
     printf("            speed: %.2f (Mlups)\n",speed);
     printf("        bandwidth: %.1f (GiB/s)\n",bandwidth);
-    
-    // deallocate memory
-    free(f0);  free(f1); free(f2);
-    free(rho); free(ux); free(uy);
     
     return 0;
 }

@@ -14,13 +14,13 @@
 #define __LBM_H
 
 const unsigned int scale = 2;
-const unsigned int NX = 32*scale;
+const unsigned int NX = 2048*scale;
 const unsigned int NY = NX;
 
 const unsigned int ndir = 9;
-const size_t mem_size_0dir   = sizeof(double)*NX*NY;
-const size_t mem_size_n0dir  = sizeof(double)*NX*NY*(ndir-1);
-const size_t mem_size_scalar = sizeof(double)*NX*NY;
+const size_t mem_size_0dir   = NX*NY;
+const size_t mem_size_n0dir  = NX*NY*(ndir-1);
+const size_t mem_size_scalar = NX*NY;
 
 const double w0 = 4.0/9.0;  // zero weight
 const double ws = 1.0/9.0;  // adjacent weight
@@ -44,14 +44,14 @@ const bool computeFlowProperties = false;
 // suppress verbose output
 const bool quiet = true;
 
-void lid_driven_cavity(double *r, double *u, double *v);
-void stream_collide_save(double*,double*,double*,double*,double*,double*,bool);
-void init_equilibrium(double*,double*,double*,double*,double*);
-void compute_flow_properties(unsigned int,double*,double*,double*,double*);
-void report_flow_properties(unsigned int,double*,double*,double*);
-void apply_lid_boundary(double *f1, double *rho, double u_lid);
-void apply_bounce_back(double *f1);
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy);
+void lid_driven_cavity(std::vector<double> &r, std::vector<double> &u, std::vector<double> &v);
+void stream_collide_save(std::vector<double>&f0, std::vector<double>&f1, std::vector<double>&f2, std::vector<double>&r, std::vector<double> &u, std::vector<double>&v, bool save);
+void init_equilibrium(std::vector<double>&f0, std::vector<double>&f1, std::vector<double> &r, std::vector<double> &u, std::vector<double>&v);
+void compute_flow_properties(unsigned int t, std::vector<double>&r, std::vector<double> &u, std::vector<double> &v, std::vector<double> &prop);
+void report_flow_properties(unsigned int t, std::vector<double>&rho, std::vector<double> &ux, std::vector<double> &uy);
+void apply_lid_boundary(std::vector<double>&f1, std::vector<double>&rho, double u_lid);
+void apply_bounce_back(std::vector<double>&f1);
+void save_to_csv(const char* filename, unsigned int t, std::vector<double>&rho, std::vector<double> &ux, std::vector<double> &uy);
 
 inline size_t field0_index(unsigned int x, unsigned int y)
 {

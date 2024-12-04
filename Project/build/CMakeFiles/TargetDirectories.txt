@@ -1,0 +1,3 @@
+/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build/CMakeFiles/Project.dir
+/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build/CMakeFiles/edit_cache.dir
+/home/fffeelipe/Documents/Classes_2024-2/AMSC/AMSC_24_25_LBM/Project/build/CMakeFiles/rebuild_cache.dir
