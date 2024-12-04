@@ -97,6 +97,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
             unsigned int yp1 = (y+1)%NY;
             unsigned int xm1 = (NX+x-1)%NX;
             unsigned int ym1 = (NY+y-1)%NY;
+
             
             // direction numbering scheme
             // 6 2 5
@@ -114,7 +115,53 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
             double ft6 = f1[fieldn_index(xp1,ym1,6)];
             double ft7 = f1[fieldn_index(xp1,yp1,7)];
             double ft8 = f1[fieldn_index(xm1,yp1,8)];
+
+            // Boundary conditions
+
+            // Bounce back on Left wall
+            if( x == 0)
+            {
+                ft1 = f1[fieldn_index(x, y, 3)];
+                ft5 = f1[fieldn_index(x, y, 7)];
+                ft8 = f1[fieldn_index(x, y, 6)];
+            }
             
+            // Bounce back on Right wall
+             if (x == NX - 1)
+            { 
+                ft3 = f1[fieldn_index(x, y, 1)];
+                ft7 = f1[fieldn_index(x, y, 5)];
+                ft6 = f1[fieldn_index(x, y, 8)];
+            }
+
+            // Bounce back on Bottom wall
+
+            if (y == 0)
+            {
+            ft2 = f1[fieldn_index(x, y, 4)];
+            ft5 = f1[fieldn_index(x, y, 7)];
+            ft6 = f1[fieldn_index(x, y, 8)];
+            }
+
+            //  Top lid (moving wall)
+            if (y == NX - 1)
+            {
+            double u_lid = u_max;
+            double rho_top = r[scalar_index(x, y)];
+        
+            // Conditions for top lid
+
+            double coeff = 2.0 * wd * (1.0/cs) * (1.0/cs) * rho_top;
+            
+            ft4 = f1[fieldn_index(x, y, 2)];
+            ft7 = f1[fieldn_index(x, y, 5)] - coeff * u_lid;
+            ft8 = f1[fieldn_index(x, y, 6)] + coeff * u_lid;
+
+            //ft1 += (2.0 / 3.0) * rho_top * u_lid;
+            //ft5 += (1.0 / 6.0) * rho_top * u_lid;
+            //ft6 += (1.0 / 6.0) * rho_top * u_lid;
+            }
+
             // compute moments
             double rho = ft0+ft1+ft2+ft3+ft4+ft5+ft6+ft7+ft8;
             double rhoinv = 1.0/rho;

@@ -3,7 +3,7 @@
 
 #include "seconds.h"
 #include "LBM.h"
-#include <utility>
+
 int main(int argc, char* argv[])
 {
     printf("Simulating Taylor-Green vortex decay\n");
@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
         stream_collide_save(f0,f1,f2,rho,ux,uy,need_scalars);
 
         // Apply boundary conditions
-        apply_bounce_back(f2);
-        apply_lid_boundary(f2, rho, u_max);
+        // apply_bounce_back(f2);
+        // apply_lid_boundary(f2, rho, u_max);
 
         
         if(save)
@@ -91,7 +91,9 @@ int main(int argc, char* argv[])
         }
         
         // swap pointerss
-        std::swap(f1,f2);
+        double *temp = f1;
+        f1 = f2;
+        f2 = temp;
         
         if(msg)
         {

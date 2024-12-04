@@ -6,7 +6,7 @@ import csv
 import pandas as pd
 
 # Directory dove sono salvati i file binari
-data_directory = './data/'  # Modifica questo percorso con quello corretto
+data_directory = './'  # Modifica questo percorso con quello corretto
 output_directory = './gifs/'
 os.makedirs(output_directory, exist_ok=True)
 
@@ -153,12 +153,14 @@ def create_gifs_from_csv(csv_filename):
 # Parametri della simulazione
 NX = 64  # Numero di nodi in direzione x (ad esempio)
 NY = 64  # Numero di nodi in direzione y (ad esempio)
-NSTEPS = 800  # Numero totale di timestep
+NSTEPS = 8000  # Numero totale di timestep
 SAVE_EVERY = 200  # Frequenza di salvataggio dei dati
 
 # Crea le GIF
 #create_gifs(NX, NY, NSTEPS, SAVE_EVERY)
 
+create_gifs_from_csv("simulation_data.csv")
+
 # Salva i dati in un file CSV
-csv_filename = './data/simulation_data.csv'
-create_gifs_from_csv(csv_filename)
+# csv_filename = './data/simulation_data.csv'
+# create_gifs_from_csv(csv_filename)

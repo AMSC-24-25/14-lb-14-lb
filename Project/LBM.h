@@ -26,14 +26,18 @@ const double w0 = 4.0/9.0;  // zero weight
 const double ws = 1.0/9.0;  // adjacent weight
 const double wd = 1.0/36.0; // diagonal weight
 
+const double cs = 1.0/1.732; // sound velocity
+
 const double nu = 1.0/6.0;
 const double tau = 3.0*nu+0.5;
 
 // Taylor-Green parameters
-const double u_max = 0.04/scale;
+const double u_max = 0.55/scale;
 const double rho0 = 1.0;
 
-const unsigned int NSTEPS = 200*scale*scale;
+// Reynolds = (NX * u_max)/nu = 100
+
+const unsigned int NSTEPS = 2000*scale*scale;
 const unsigned int NSAVE  =  50*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
 
