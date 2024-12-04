@@ -3,7 +3,7 @@
 
 #include "seconds.h"
 #include "LBM.h"
-
+#include <utility>
 int main(int argc, char* argv[])
 {
     printf("Simulating Taylor-Green vortex decay\n");
@@ -91,9 +91,7 @@ int main(int argc, char* argv[])
         }
         
         // swap pointerss
-        double *temp = f1;
-        f1 = f2;
-        f2 = temp;
+        std::swap(f1,f2);
         
         if(msg)
         {
