@@ -14,7 +14,7 @@
 #define __LBM_H
 
 const unsigned int scale = 2;
-const unsigned int NX = 32*scale;
+const unsigned int NX = 64*scale;
 const unsigned int NY = NX;
 
 const unsigned int ndir = 9;
@@ -28,7 +28,7 @@ const double wd = 1.0/36.0; // diagonal weight
 
 const double cs = 1.0/1.732; // sound velocity
 
-const double nu = 1.0/6.0;
+const double nu = 0.352; //1.0/6.0;
 const double tau = 3.0*nu+0.5;
 
 // Taylor-Green parameters
@@ -37,7 +37,7 @@ const double rho0 = 1.0;
 
 // Reynolds = (NX * u_max)/nu = 100
 
-const unsigned int NSTEPS = 2000*scale*scale;
+const unsigned int NSTEPS = 8000*scale*scale;
 const unsigned int NSAVE  =  50*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
 
