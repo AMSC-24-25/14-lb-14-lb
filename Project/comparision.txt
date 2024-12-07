@@ -1,0 +1,41 @@
+vector parallel for 
+
+Simulating Taylor-Green vortex decay
+      domain size: 2048x2048
+               nu: 0.166667
+              tau: 1
+            u_max: 0.02
+             rho0: 1
+        timesteps: 800
+       save every: 200
+    message every: 200
+
+ ----- performance information -----
+ memory allocated: 640.0 (MiB)
+        timesteps: 800
+          runtime: 23.375 (s)
+            speed: 143.55 (Mlups)
+        bandwidth: 19.3 (GiB/s)
+
+
+---------------------------------------------------
+
+
+vector single core:
+
+Simulating Taylor-Green vortex decay
+      domain size: 2048x2048
+               nu: 0.166667
+              tau: 1
+            u_max: 0.02
+             rho0: 1
+        timesteps: 800
+       save every: 200
+    message every: 200
+
+ ----- performance information -----
+ memory allocated: 640.0 (MiB)
+        timesteps: 800
+          runtime: 43.353 (s)
+            speed: 77.40 (Mlups)
+        bandwidth: 10.4 (GiB/s)

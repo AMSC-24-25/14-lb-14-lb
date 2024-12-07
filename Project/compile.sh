@@ -9,7 +9,7 @@ g++ ${CXXFLAGS} -c seconds.cpp -o seconds.o
 g++ ${CXXFLAGS} -c main.cpp -o main.o
  
 g++ LBM.o seconds.o main.o -o sim -lrt
-
+./sim
 rm -f LBM.o seconds.o main.o
 
 # for mac:

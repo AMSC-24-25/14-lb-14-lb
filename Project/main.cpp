@@ -4,6 +4,9 @@
 #include "seconds.h"
 #include "LBM.h"
 #include <utility>
+#include <omp.h>
+#include <string>
+#include <iostream>
 int main(int argc, char* argv[])
 {
     printf("Simulating Taylor-Green vortex decay\n");

@@ -14,7 +14,7 @@
 #define __LBM_H
 
 const unsigned int scale = 2;
-const unsigned int NX = 32*scale;
+const unsigned int NX = 1024*scale;
 const unsigned int NY = NX;
 
 const unsigned int ndir = 9;

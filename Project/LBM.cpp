@@ -13,7 +13,7 @@
 #include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-
+#include "omp.h"
 #include "LBM.h"
 
 void lid_driven_cavity(double *r, double *u, double *v)
@@ -89,6 +89,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
     const double tauinv = 2.0/(6.0*nu+1.0); // 1/tau
     const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
 
+    #pragma omp parallel for
     for(unsigned int y = 0; y < NY; ++y)
     {
         for(unsigned int x = 0; x < NX; ++x)
@@ -253,7 +254,10 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
 
 void apply_bounce_back(double *f1)
 {
+    #pragma omp parallel
+    {
     // Boundary conditions for the bottom, right and left walls
+    #pragma omp for
     for (unsigned int y = 0; y < NY; ++y)
     {
         // Left wall
@@ -270,12 +274,14 @@ void apply_bounce_back(double *f1)
     }
 
     // Bottom wall
+    #pragma omp for
     for (unsigned int x = 0; x < NX; ++x)
     {
         unsigned int y = 0;
         f1[fieldn_index(x, y, 2)] = f1[fieldn_index(x, y, 4)];
         f1[fieldn_index(x, y, 5)] = f1[fieldn_index(x, y, 7)];
         f1[fieldn_index(x, y, 6)] = f1[fieldn_index(x, y, 8)];
+    }
     }
 }
 
@@ -284,6 +290,7 @@ void apply_lid_boundary(double *f1, double *rho, double u_lid)
 {
     unsigned int y = NY - 1; // Top lid
 
+    #pragma omp parallel for
     for (unsigned int x = 0; x < NX; ++x)
     {
         double rho_top = rho[scalar_index(x, y)];
