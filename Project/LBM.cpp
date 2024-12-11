@@ -16,26 +16,35 @@
 
 #include "LBM.h"
 
+//Questi non sono array, ma puntatori a singoli valori double!!!!
+inline void lid_driven_cavity(unsigned int x, unsigned int y, double *r, double *u, double *v) {
+
+    
+    *r = rho0; //Set initial density constant
+    
+    // Inizialize velocity
+    if (y == NY - 1) // Top lid
+    {
+        *u = u_max; // Constant value on top lid
+        *v = 0.0;
+    }
+    else // All other points
+    {
+        *u = 0.0;
+        *v = 0.0;
+    }
+}
+
+
 void lid_driven_cavity(double *r, double *u, double *v)
 {
+    #pragma omp parallel for default(none) shared(r,u,v) schedule(static)
     for (unsigned int y = 0; y < NY; ++y)
     {
         for (unsigned int x = 0; x < NX; ++x)
         {
             size_t sidx = scalar_index(x, y);
-            r[sidx] = rho0; //Set initial density constant
-            
-            // Inizialize velocity
-            if (y == NY - 1) // Top lid
-            {
-                u[sidx] = u_max; // Constant value on top lid
-                v[sidx] = 0.0;
-            }
-            else // All other points
-            {
-                u[sidx] = 0.0;
-                v[sidx] = 0.0;
-            }
+            lid_driven_cavity(x, y, &r[sidx], &u[sidx], &v[sidx]);
         }
     }
 }
@@ -43,6 +52,7 @@ void lid_driven_cavity(double *r, double *u, double *v)
 
 void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
 {
+    #pragma omp parallel for default(none) shared(f0,f1,r,u,v) schedule(static)
     for(unsigned int y = 0; y < NY; ++y)
     {
         for(unsigned int x = 0; x < NX; ++x)
@@ -89,6 +99,8 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
     const double tauinv = 2.0/(6.0*nu+1.0); // 1/tau
     const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
 
+    #pragma omp parallel for default(none) \
+       shared(f0,f1,f2,r,u,v,save) schedule(static)
     for(unsigned int y = 0; y < NY; ++y)
     {
         for(unsigned int x = 0; x < NX; ++x)
@@ -180,6 +192,10 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
     double sumuxa2 = 0.0;  //                   ux
     double sumuya2 = 0.0;  //                   uy
     
+    #pragma omp parallel for default(none) shared(t,r,u,v) \
+        reduction(+:E,sumrhoe2,sumuxe2,sumuye2, \
+                      sumrhoa2,sumuxa2,sumuya2) \
+        schedule(static)
     for(unsigned int y = 0; y < NY; ++y)
     {
         for(unsigned int x = 0; x < NX; ++x)
@@ -190,7 +206,7 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
             E += rho*(ux*ux + uy*uy);
             
             double rhoa, uxa, uya;
-            //taylor_green(t,x,y,&rhoa,&uxa,&uya);   // CHANGE WITH NEW FUNCTION?
+            lid_driven_cavity(x, y, &rhoa, &uxa, &uya);
             
             sumrhoe2 += (rho-rhoa)*(rho-rhoa);
             sumuxe2  += (ux-uxa)*(ux-uxa);
@@ -254,6 +270,8 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
 void apply_bounce_back(double *f1)
 {
     // Boundary conditions for the bottom, right and left walls
+    #pragma omp parallel for default(none) \
+       shared(f1) schedule(static)
     for (unsigned int y = 0; y < NY; ++y)
     {
         // Left wall
@@ -270,6 +288,8 @@ void apply_bounce_back(double *f1)
     }
 
     // Bottom wall
+    #pragma omp parallel for default(none) \
+       shared(f1) schedule(static)
     for (unsigned int x = 0; x < NX; ++x)
     {
         unsigned int y = 0;
@@ -283,7 +303,8 @@ void apply_bounce_back(double *f1)
 void apply_lid_boundary(double *f1, double *rho, double u_lid)
 {
     unsigned int y = NY - 1; // Top lid
-
+    #pragma omp parallel for default(none) \
+       shared(f1, rho, u_lid, y) schedule(static)
     for (unsigned int x = 0; x < NX; ++x)
     {
         double rho_top = rho[scalar_index(x, y)];

@@ -160,5 +160,5 @@ SAVE_EVERY = 200  # Frequenza di salvataggio dei dati
 #create_gifs(NX, NY, NSTEPS, SAVE_EVERY)
 
 # Salva i dati in un file CSV
-csv_filename = './data/simulation_data.csv'
+csv_filename = './simulation_data.csv'
 create_gifs_from_csv(csv_filename)

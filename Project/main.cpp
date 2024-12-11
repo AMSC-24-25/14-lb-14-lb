@@ -6,7 +6,7 @@
 #include <utility>
 int main(int argc, char* argv[])
 {
-    printf("Simulating Taylor-Green vortex decay\n");
+    printf("Simulating Lid Driven cavity\n");
     printf("      domain size: %ux%u\n",NX,NY);
     printf("               nu: %g\n",nu);
     printf("              tau: %g\n",tau);
@@ -67,8 +67,9 @@ int main(int argc, char* argv[])
     }
     
     double start = seconds();
-    
-    // main simulation loop; take NSTEPS time steps
+    #pragma omp parallel master 
+    {
+// main simulation loop; take NSTEPS time steps
     for(unsigned int n = 0; n < NSTEPS; ++n)
     {
         bool save = (n+1)%NSAVE == 0;
@@ -86,11 +87,15 @@ int main(int argc, char* argv[])
         
         if(save)
         {
+            #pragma omp taskwait
             // Save data in CSV file
-            save_to_csv(csv_filename, n + 1, rho, ux, uy);
+            #pragma omp task 
+            {
+                save_to_csv(csv_filename, n + 1, rho, ux, uy);
+            }
         }
         
-        // swap pointerss
+        // swap pointers
         std::swap(f1,f2);
         
         if(msg)
@@ -104,6 +109,8 @@ int main(int argc, char* argv[])
                 printf("completed timestep %d\n",n+1);
         }
     }
+    }
+    
     double end = seconds();
     double runtime = end-start;
 
