@@ -80,9 +80,7 @@ int main(int argc, char* argv[])
         // optionally compute and save moments
         stream_collide_save(f0,f1,f2,rho,ux,uy,need_scalars);
 
-        // Apply boundary conditions
-        apply_bounce_back(f2);
-        apply_lid_boundary(f2, rho, u_max);
+        
 
         
         if(save)

@@ -32,6 +32,7 @@ const double Re = 100.0;
 
 const double nu = 1.0/6.0;
 const double tau = 3.0*nu+0.5;
+const double cs = 1.0/1.732;
 
 //Having large u_max destabilizes the simulation, higher NX is better
 const double u_max = Re/(6*NX);
