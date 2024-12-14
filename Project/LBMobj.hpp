@@ -33,6 +33,8 @@ class LBM
         double *rho;
         double *u;
 
+    void init_equilibrium();
+
 }
 
 #endif /* __LBM_H */
