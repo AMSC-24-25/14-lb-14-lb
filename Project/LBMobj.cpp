@@ -1,33 +1,73 @@
 #include "LBMobj.hpp"
 
+using Eigen::VectorXd;
+using Eigen::ArrayXd;
 
-void init_equilibrium()
+void LBM::init_equilibrium()
 {
 
     #pragma omp parallel for default(none) shared(this) schedule(static)
-    for(unsigned int x = 0; x < this.Nx(); ++x)
+    for(unsigned int x = 0; x < this->N.x; ++x)
     {
-        for(unsigned int y = 0; y < this.Ny(); ++y)
+        for(unsigned int y = 0; y < this->N.y; ++y)
         {
-            for(unsigned int z = 0; z < this.Nz(), ++z)
+            for(unsigned int z = 0; z < this->N.z; ++z)
             {
-                double rho = this.r(x,y,z);
-                auto u  = this.u(x,y,z);
-                
-                double w0 = this.v.w(0);
-                                 
-                this.setRest(x,y,z, w0 * rho * omusq);
+                double rho = get_rho(x,y,z);
+                VectorXd u = get_u(x,y,z);
+                double unorm = u.norm();
+                double omusq = 1.0 - 1.5*(unorm * unorm);
+                ArrayXd c3u = this->v.c * (u * 3.0);
+                VectorXd f = this->v.w.array().cwiseproduct(1.0 * omusq + c3u.cwiseproduct(c3u*0.5 + 1.0));
 
-                for(unsigned int i = 0; i < this.v.getQ(); ++i)
-                {
-                    auto ci = this.v.c(i);
-                    double wi = this.v.w(i);
-                    double cidot3u = 0;
-                    for(unsigned int k = 0; k < this.v.getD(); ++k) cidot3u = ci.get(k) * 3.0 * u.get(k);
-
-                    this.setPopulation(x,y,z,i, wi * (omusq + cidot3u*(1.0+0.5*cidot3u)) );
-                }
+                savePopulation(x,y,z, &f);
             }
         }
     }
 }
+
+void LBM::stream_collide_save()
+{
+        // useful constants
+    const double tauinv = 2.0/(6.0*this->nu+1.0); // 1/tau
+    const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
+
+    #pragma omp parallel for default(none) shared(this, tauinv, omtauinv) schedule(static)
+    for(unsigned int x = 0; x < this->N.x; ++x)
+    {
+        for(unsigned int y = 0; y < this->N.y; ++y)
+        {
+            for(unsigned int z = 0; z < this->N.z; ++z)
+            {
+                //classical stream
+                VectorXd stream = populationAdjacent(x,y,z);
+                //modify stream applying boundaries
+                applyBoundary(x,y,z, stream);
+
+                //compute moments
+                double rho = stream.sum();
+                set_rho(x,y,z, rho );
+
+                double rhoinv = 1.0/rho;
+
+                VectorXd cf_rhoinv = (this->v.c.transpose() * stream) * rhoinv;
+                VectorXd& u = cf_rhoinv;
+                set_u(x,y,z, u );
+
+                //collision
+                double unorm = u.norm();
+                double omusq = 1.0 - 1.5*(unorm * unorm);
+                u *= 3.0;
+                ArrayXd c3u = this->v.c * (u * 3.0);
+                VectorXd twr = this->v.w * tauinv * rho;
+
+                stream *= omtauinv;
+                stream += twr.array().cwiseproduct( omusq + c3u.cwiseproduct(1.0 + 0.5*c3u) ); 
+
+                this->savePopulation(x,y,z, stream);
+            }
+        }
+    }
+}
+
+

@@ -11,6 +11,7 @@
  *
  */
 #include <tuple>
+#include <Eigen/Dense>
 
 #ifndef __LBM_H
 #define __LBM_H
@@ -21,21 +22,27 @@ class LBM
     private:
         Velocity v;
         unsigned int scale;
-        std::tuple<int, int, int> N;
+        struct N {
+            int x;
+            int y;
+            int z;
+        } N;
         const double nu = 1.0/6.0;
         const double tau = 3.0*nu+0.5;
         const double cs = 1.0/1.732;
 
         bool computeFlowProperties;
         bool quiet;
+        int step;
 
         double *population;
         double *rho;
         double *u;
 
     void init_equilibrium();
+    void stream_collide_save();
 
-}
+};
 
 #endif /* __LBM_H */
 
