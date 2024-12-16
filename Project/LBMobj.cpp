@@ -91,3 +91,13 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
     rho = (double*) malloc(sizeof(double) * N.x * N.y * N.z);
     u = (double*) malloc(sizeof(double) * N.x * N.y * N.z * v->getD());
 }
+
+void LBM::applyInitial(int x, int y, int z)
+{
+    InitialCondition(x,y,z, *this );
+}
+
+void LBM::applyBoundary(int x, int y, int z, VectorXd& f)
+{
+    for(auto bc : BoundaryConditions) bc(x,y,z, f, *this);
+}

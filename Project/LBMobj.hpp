@@ -11,6 +11,8 @@
  *
  */
 #include <memory>
+#include <functional>
+#include <vector>
 #include <Eigen/Dense>
 
 #ifndef __LBM_H
@@ -42,20 +44,22 @@ class LBM
                 static const int fromStdQ(StandardSet std);
         };
 
-    private:
-        
-
-
-
-        std::unique_ptr<VelocitySet> v;
+    std::function<void(int,int,int, LBM&)> InitialCondition;
+    std::vector<std::function<void(int,int,int, Eigen::VectorXd&, LBM&)>> BoundaryConditions;
         struct dimensions {
             int x;
             int y;
             int z;
         } const N;
+        
         const double nu;
         const double tau = 3.0*nu+0.5;
         const double cs = 1.0/1.732;
+    
+    private:
+        std::unique_ptr<VelocitySet> v;
+        
+        
 
         bool computeFlowProperties;
         bool quiet;
@@ -65,21 +69,29 @@ class LBM
         double *rho;
         double *u;
 
-    void init_equilibrium();
-    void stream_collide_save();
+    public:
+        void init_equilibrium();
+        void stream_collide_save();
 
-    LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+        LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
 
-    inline const double get_rho(int x, int y, int z);
-    inline void set_rho(int x, int y, int z, double rho);
-    inline const Eigen::VectorXd get_u(int x, int y, int z);
-    inline void set_u(int x, int y, int z, const Eigen::VectorXd& u);
-    inline Eigen::VectorXd populationAdjacent(int x, int y, int z);
-    inline void savePopulation(int x, int y, int z, const Eigen::VectorXd& population);
+        inline const double get_rho(int x, int y, int z);
+        inline void set_rho(int x, int y, int z, double rho);
+        inline const Eigen::VectorXd get_u(int x, int y, int z);
+        inline void set_u(int x, int y, int z, const Eigen::VectorXd& u);
+        inline Eigen::VectorXd getPopulation(int x, int y, int z);
+    
+    private:
+    
+        inline Eigen::VectorXd populationAdjacent(int x, int y, int z);
+        inline void savePopulation(int x, int y, int z, const Eigen::VectorXd& population);
 
-    inline int index_r(int x, int y, int z);
-    inline int index_u(int x, int y, int z);
-    inline int index_f(int x, int y, int z);
+        void applyInitial(int x, int y, int z);
+        void applyBoundary(int x, int y, int z, Eigen::VectorXd& f);
+
+        inline int index_r(int x, int y, int z);
+        inline int index_u(int x, int y, int z);
+        inline int index_f(int x, int y, int z);
 
 
 
@@ -108,6 +120,18 @@ void LBM::set_u(int x, int y, int z, const Eigen::VectorXd& u)
         this->u[index_u(x,y,z) + i] = u(i);
     } 
 }
+
+Eigen::VectorXd LBM::getPopulation(int x, int y, int z)
+{
+    Eigen::VectorXd p( v->getQ() );
+    const Eigen::MatrixXd& c = v->get_c();
+    for(int i = 0; i < v->getQ(); ++i)
+    {
+        p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (~step & 1) + i];
+    } 
+    return p;
+}
+
 
 Eigen::VectorXd LBM::populationAdjacent(int x, int y, int z)
 {

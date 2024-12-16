@@ -136,7 +136,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
             }
             
             // Bounce back on Right wall
-             if (x == NX - 1)
+            if (x == NX - 1)
             { 
                 ft3 = f1[fieldn_index(x, y, 1)];
                 ft7 = f1[fieldn_index(x, y, 5)];
