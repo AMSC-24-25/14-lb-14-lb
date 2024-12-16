@@ -118,7 +118,7 @@ Eigen::VectorXd LBM::populationAdjacent(int x, int y, int z)
         int x_adj = x + c(i, 0);
         int y_adj = y + (v->getD() > 1)? c(i, 1) : 0;
         int z_adj = z + (v->getD() == 3)? c(i, 2) : 0;
-        adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + i];
+        adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (~step & 1) + i];
     } 
     return adj;
 }
@@ -127,7 +127,7 @@ void LBM::savePopulation(int x, int y, int z, const Eigen::VectorXd& population)
 {
     for(int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x,y,z) + i] = population(i);
+        this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) + i] = population(i);
     }     
 }
 
