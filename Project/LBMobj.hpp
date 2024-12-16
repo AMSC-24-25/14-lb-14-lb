@@ -18,9 +18,36 @@
 
 class LBM 
 {
+    public:
+        class VelocitySet
+        {
+            public: 
+                enum StandardSet { D1Q3, D2Q9, D3Q15, D3Q19, D3Q27 };
+            
+            protected: 
+                const int D;
+                const int Q;
+                Eigen::MatrixXd c;
+                Eigen::VectorXd w;
+
+            public:
+                VelocitySet(StandardSet set);
+                const int getD();
+                const int getQ();
+                const Eigen::MatrixXd& get_c();
+                const Eigen::VectorXd& get_w();
+
+            private:
+                static const int fromStdD(StandardSet std);
+                static const int fromStdQ(StandardSet std);
+        };
 
     private:
-        Velocity v;
+        
+
+
+
+        VelocitySet v;
         unsigned int scale;
         struct N {
             int x;
