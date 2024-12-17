@@ -18,7 +18,6 @@
 
 inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double &u, double &v)
 {
-
     r = rho0; // Set initial density constant
 
     // Inizialize velocity
@@ -284,7 +283,7 @@ void save_scalar(const char *name, std::unique_ptr<double[]> &scalar, unsigned i
     FILE *fout = fopen(filename, "wb+");
 
     // write data
-    fwrite(&scalar, 1, mem_size_scalar, fout);
+    fwrite(&scalar, 1, size_scalar, fout);
 
     // close file
     fclose(fout);

@@ -20,10 +20,12 @@ const unsigned int scale = 3;
 const unsigned int NX = 64 * scale;
 const unsigned int NY = NX;
 
+// The number of directions in the lattice
 const unsigned int ndir = 9;
-const size_t mem_size_0dir = sizeof(double) * NX * NY;
-const size_t mem_size_n0dir = sizeof(double) * NX * NY * (ndir - 1);
-const size_t mem_size_scalar = sizeof(double) * NX * NY;
+
+const size_t size_0dir = NX * NY;
+const size_t size_n0dir = NX * NY * (ndir - 1);
+const size_t size_scalar = NX * NY;
 
 const double w0 = 4.0 / 9.0;  // zero weight
 const double ws = 1.0 / 9.0;  // adjacent weight

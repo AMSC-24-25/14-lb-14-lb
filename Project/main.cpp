@@ -21,14 +21,14 @@ int main(int argc, char *argv[])
     double bytesPerMiB = 1024.0 * 1024.0;
     double bytesPerGiB = 1024.0 * 1024.0 * 1024.0;
 
-    std::unique_ptr<double[]> f0 = std::make_unique<double[]>(mem_size_0dir); //(double*) malloc(mem_size_0dir);
-    std::unique_ptr<double[]> f1 = std::make_unique<double[]>(mem_size_n0dir);
-    std::unique_ptr<double[]> f2 = std::make_unique<double[]>(mem_size_n0dir);
-    std::unique_ptr<double[]> rho = std::make_unique<double[]>(mem_size_scalar);
-    std::unique_ptr<double[]> ux = std::make_unique<double[]>(mem_size_scalar);
-    std::unique_ptr<double[]> uy = std::make_unique<double[]>(mem_size_scalar);
+    std::unique_ptr<double[]> f0 = std::make_unique<double[]>(size_0dir); //(double*) malloc(mem_size_0dir);
+    std::unique_ptr<double[]> f1 = std::make_unique<double[]>(size_n0dir);
+    std::unique_ptr<double[]> f2 = std::make_unique<double[]>(size_n0dir);
+    std::unique_ptr<double[]> rho = std::make_unique<double[]>(size_scalar);
+    std::unique_ptr<double[]> ux = std::make_unique<double[]>(size_scalar);
+    std::unique_ptr<double[]> uy = std::make_unique<double[]>(size_scalar);
 
-    size_t total_mem_bytes = mem_size_0dir + 2 * mem_size_n0dir + 3 * mem_size_scalar;
+    size_t total_mem_bytes = size_0dir + 2 * size_n0dir + 3 * size_scalar * sizeof(double);
 
     if (f0 == NULL || f1 == NULL || f2 == NULL || rho == NULL || ux == NULL || uy == NULL)
     {
