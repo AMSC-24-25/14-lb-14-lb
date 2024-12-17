@@ -10,6 +10,9 @@
  * Author: Orest Shardt
  *
  */
+
+#include <memory>
+
 #ifndef __LBM_H
 #define __LBM_H
 
@@ -49,14 +52,14 @@ const bool computeFlowProperties = false;
 // suppress verbose output
 const bool quiet = true;
 
-void lid_driven_cavity(double *r, double *u, double *v);
-void stream_collide_save(double*,double*,double*,double*,double*,double*,bool);
-void init_equilibrium(double*,double*,double*,double*,double*);
-void compute_flow_properties(unsigned int,double*,double*,double*,double*);
-void report_flow_properties(unsigned int,double*,double*,double*);
-void apply_lid_boundary(double *f1, double *rho, double u_lid);
-void apply_bounce_back(double *f1);
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy);
+void lid_driven_cavity(std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v);
+void stream_collide_save(std::unique_ptr<double[]> &f0, std::unique_ptr<double[]> &f1, std::unique_ptr<double[]> &f2, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v, bool save);
+void init_equilibrium(std::unique_ptr<double[]> &f0, std::unique_ptr<double[]> &f1, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v);
+void compute_flow_properties(unsigned int t, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v, std::unique_ptr<double[]> &prop);
+void report_flow_properties(unsigned int t, std::unique_ptr<double[]> &rho, std::unique_ptr<double[]> &ux, std::unique_ptr<double[]> &uy);
+void apply_lid_boundary(std::unique_ptr<double[]> &f1, std::unique_ptr<double[]> &rho, double u_lid);
+void apply_bounce_back(std::unique_ptr<double[]> &f1);
+void save_to_csv(const char* filename, unsigned int t, std::unique_ptr<double[]> &rho, std::unique_ptr<double[]> &ux, std::unique_ptr<double[]> &uy);
 
 inline size_t field0_index(unsigned int x, unsigned int y)
 {

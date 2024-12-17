@@ -13,30 +13,29 @@
 #include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-
+#include <memory>
 #include "LBM.h"
 
-//Questi non sono array, ma puntatori a singoli valori double!!!!
-inline void lid_driven_cavity(unsigned int x, unsigned int y, double *r, double *u, double *v) {
+inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double &u, double &v) {
 
     
-    *r = rho0; //Set initial density constant
+    r = rho0; //Set initial density constant
     
     // Inizialize velocity
     if (y == NY - 1) // Top lid
     {
-        *u = u_max; // Constant value on top lid
-        *v = 0.0;
+        u = u_max; // Constant value on top lid
+        v = 0.0;
     }
     else // All other points
     {
-        *u = 0.0;
-        *v = 0.0;
+        u = 0.0;
+        v = 0.0;
     }
 }
 
 
-void lid_driven_cavity(double *r, double *u, double *v)
+void lid_driven_cavity(std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v)
 {
     #pragma omp parallel for default(none) shared(r,u,v) schedule(static)
     for (unsigned int y = 0; y < NY; ++y)
@@ -44,13 +43,13 @@ void lid_driven_cavity(double *r, double *u, double *v)
         for (unsigned int x = 0; x < NX; ++x)
         {
             size_t sidx = scalar_index(x, y);
-            lid_driven_cavity(x, y, &r[sidx], &u[sidx], &v[sidx]);
+            lid_driven_cavity(x, y, r[sidx], u[sidx], v[sidx]);
         }
     }
 }
 
 
-void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
+void init_equilibrium(std::unique_ptr<double[]> &f0, std::unique_ptr<double[]> &f1, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v)
 {
     #pragma omp parallel for default(none) shared(f0,f1,r,u,v) schedule(static)
     for(unsigned int y = 0; y < NY; ++y)
@@ -93,7 +92,7 @@ void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
     }
 }
 
-void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *u, double *v, bool save)
+void stream_collide_save(std::unique_ptr<double[]> &f0, std::unique_ptr<double[]> &f1, std::unique_ptr<double[]> &f2, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v, bool save)
 {
     // useful constants
     const double tauinv = 2.0/(6.0*nu+1.0); // 1/tau
@@ -213,7 +212,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
 }
 
 ///////////////////////CHECK THIS!!!!!!!!!!!!!!!!!!!/////////////////////////
-void compute_flow_properties(unsigned int t, double *r, double *u, double *v, double *prop)
+void compute_flow_properties(unsigned int t, std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v, double prop[])
 {
     // prop must point to space for 4 doubles:
     // 0: energy
@@ -245,7 +244,7 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
             E += rho*(ux*ux + uy*uy);
             
             double rhoa, uxa, uya;
-            lid_driven_cavity(x, y, &rhoa, &uxa, &uya);
+            lid_driven_cavity(x, y, rhoa, uxa, uya);
             
             sumrhoe2 += (rho-rhoa)*(rho-rhoa);
             sumuxe2  += (ux-uxa)*(ux-uxa);
@@ -263,14 +262,14 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
     prop[3] = sqrt(sumuye2/sumuya2);
 }
 
-void report_flow_properties(unsigned int t, double *rho, double *ux, double *uy)
+void report_flow_properties(unsigned int t, std::unique_ptr<double[]> &rho, std::unique_ptr<double[]> &ux, std::unique_ptr<double[]> &uy)
 {
     double prop[4];
     compute_flow_properties(t,rho,ux,uy,prop);
     printf("%u,%g,%g,%g,%g\n",t,prop[0],prop[1],prop[2],prop[3]);
 }
 
-void save_scalar(const char* name, double *scalar, unsigned int n)
+void save_scalar(const char* name, std::unique_ptr<double[]> &scalar, unsigned int n)
 {
     // assume reasonably-sized file names
     char filename[128];
@@ -288,7 +287,7 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
     FILE *fout = fopen(filename,"wb+");
     
     // write data
-    fwrite(scalar,1,mem_size_scalar,fout);
+    fwrite(&scalar,1,mem_size_scalar,fout);
     
     // close file
     fclose(fout);
@@ -305,7 +304,7 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
     }
 }
 
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy)
+void save_to_csv(const char* filename, unsigned int t, std::unique_ptr<double[]> &rho, std::unique_ptr<double[]> &ux, std::unique_ptr<double[]> &uy)
 {
     FILE *csv_file = fopen(filename, "a");
     if (csv_file == NULL)

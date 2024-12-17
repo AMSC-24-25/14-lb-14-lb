@@ -4,6 +4,7 @@
 #include "seconds.h"
 #include "LBM.h"
 #include <utility>
+#include <memory>
 int main(int argc, char* argv[])
 {
     printf("Simulating Lid Driven cavity\n");
@@ -20,12 +21,12 @@ int main(int argc, char* argv[])
     double bytesPerMiB = 1024.0*1024.0;
     double bytesPerGiB = 1024.0*1024.0*1024.0;
     
-    double *f0  = (double*) malloc(mem_size_0dir);
-    double *f1  = (double*) malloc(mem_size_n0dir);
-    double *f2  = (double*) malloc(mem_size_n0dir);
-    double *rho = (double*) malloc(mem_size_scalar);
-    double *ux  = (double*) malloc(mem_size_scalar);
-    double *uy  = (double*) malloc(mem_size_scalar);
+    std::unique_ptr<double[]>f0  = std::make_unique<double[]>(mem_size_0dir);//(double*) malloc(mem_size_0dir);
+    std::unique_ptr<double[]>f1  = std::make_unique<double[]>(mem_size_n0dir);
+    std::unique_ptr<double[]>f2  = std::make_unique<double[]>(mem_size_n0dir);
+    std::unique_ptr<double[]>rho = std::make_unique<double[]>(mem_size_scalar);
+    std::unique_ptr<double[]>ux  = std::make_unique<double[]>(mem_size_scalar);
+    std::unique_ptr<double[]>uy  = std::make_unique<double[]>(mem_size_scalar);
     
     size_t total_mem_bytes = mem_size_0dir + 2*mem_size_n0dir + 3*mem_size_scalar;
     
@@ -129,10 +130,6 @@ int main(int argc, char* argv[])
     printf("          runtime: %.3f (s)\n",runtime);
     printf("            speed: %.2f (Mlups)\n",speed);
     printf("        bandwidth: %.1f (GiB/s)\n",bandwidth);
-    
-    // deallocate memory
-    free(f0);  free(f1); free(f2);
-    free(rho); free(ux); free(uy);
     
     return 0;
 }
