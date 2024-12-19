@@ -32,9 +32,9 @@ def create_gifs(nx, ny, nsteps, save_every, umax):
     # Itera su ogni timestep salvato
     for n in range(0, nsteps + 1, save_every):
         # File di input
-        rho_file = os.path.join(data_directory, f'rho{n:04d}.bin')
-        ux_file = os.path.join(data_directory, f'ux{n:04d}.bin')
-        uy_file = os.path.join(data_directory, f'uy{n:04d}.bin')
+        rho_file = os.path.join(data_directory, f'rho{n:05d}.bin')
+        ux_file = os.path.join(data_directory, f'ux{n:05d}.bin')
+        uy_file = os.path.join(data_directory, f'uy{n:05d}.bin')
         
         # Leggi i dati
         rho = read_binary_file(rho_file, (ny, nx))
@@ -67,7 +67,7 @@ def create_gifs(nx, ny, nsteps, save_every, umax):
         plt.axis('off')
         
         # Campionamento delle frecce
-        skip = 12
+        skip = 24
         y = np.linspace(0, ny - 5, ny // skip).astype(int)
         x = np.linspace(0, nx - 1, nx // skip).astype(int)
         ax.quiver(x, y, ux[np.ix_(y, x)], uy[np.ix_(y, x)], color='white', scale=0.5, width=0.005)
