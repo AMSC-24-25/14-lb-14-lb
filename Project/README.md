@@ -31,10 +31,14 @@ This project implements a Lattice Boltzmann Method (LBM) simulation, a numerical
 ## How to Use
 1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g., grid size, time steps).
 2. Compile and run the simulation.
+3. Run the cvs_to_gif.py to create the visualization representation of the simulation.
 
 ## Example Output
 The simulation outputs results such as velocity fields, density distributions, or other relevant physical quantities. 
 Check simulation_data.csv as example.
+
+The final result is a gif like this:
+![alt text](gifs/velocity_evolution_from_csv.gif)
 
 
 ## Authors
