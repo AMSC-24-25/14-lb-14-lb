@@ -25,6 +25,7 @@ const unsigned int NY = NX;
 // The number of directions in the lattice
 const unsigned int ndir = 9;
 
+// Size for the populations and scalar values
 const size_t size_0dir = NX * NY;
 const size_t size_n0dir = NX * NY * (ndir - 1);
 const size_t size_scalar = NX * NY;
@@ -37,6 +38,7 @@ const double wd = 1.0 / 36.0; // diagonal weight
 // cs^2 = 1/3
 const double Re = 100.0;
 
+// kinematic viscosity nu and the corresponding relaxation parameter tau
 const double nu = 1.0 / 6.0;
 const double tau = 3.0 * nu + 0.5;
 const double cs = 1.0 / 1.732;

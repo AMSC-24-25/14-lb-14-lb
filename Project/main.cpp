@@ -8,8 +8,7 @@
 #include <omp.h>
 int test();
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     if (bTest) {
         if (test() == 0)
             return 0;
@@ -78,37 +77,35 @@ int main(int argc, char *argv[])
     //int nThreads = omp_get_num_threads();
 
     double start = seconds();
-//#pragma omp parallel master
-    //{
-        // main simulation loop; take NSTEPS time steps
-        for (unsigned int n = 0; n < NSTEPS; ++n)
+    
+    // main simulation loop; take NSTEPS time steps
+    for (unsigned int n = 0; n < NSTEPS; ++n)
+    {
+        bool save = (n + 1) % NSAVE == 0;
+        bool msg = (n + 1) % NMSG == 0;
+        bool need_scalars = save || (msg && computeFlowProperties);
+
+        // stream and collide from f1 storing to f2
+        // optionally compute and save moments
+        stream_collide_save(f0, f1, f2, rho, ux, uy, need_scalars);
+
+        if (save)
         {
-            bool save = (n + 1) % NSAVE == 0;
-            bool msg = (n + 1) % NMSG == 0;
-            bool need_scalars = save || (msg && computeFlowProperties);
+            save_to_csv(csv_filename, n + 1, rho, ux, uy);
+        }
 
-            // stream and collide from f1 storing to f2
-            // optionally compute and save moments
-            stream_collide_save(f0, f1, f2, rho, ux, uy, need_scalars);
+        // swap pointers
+        std::swap(f1, f2);
 
-            if (save)
+        if (msg)
+        {
+            if (computeFlowProperties)
             {
-                save_to_csv(csv_filename, n + 1, rho, ux, uy);
+                report_flow_properties(n + 1, rho, ux, uy);
             }
 
-            // swap pointers
-            std::swap(f1, f2);
-
-            if (msg)
-            {
-                if (computeFlowProperties)
-                {
-                    report_flow_properties(n + 1, rho, ux, uy);
-                }
-
-                if (!quiet)
-                    printf("completed timestep %d\n", n + 1);
-            }
+            if (!quiet)
+                printf("completed timestep %d\n", n + 1);
         }
     //}
 

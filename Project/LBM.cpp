@@ -14,6 +14,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <memory>
+#include <omp.h>
 #include "LBM.h"
 #include <omp.h>
 
@@ -25,13 +26,13 @@ inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double 
     if (y == NY - 1) // Top lid
     {
         u = u_max; // Constant value on top lid
-        v = 0.0;
     }
     else // All other points
     {
         u = 0.0;
-        v = 0.0;
     }
+
+    v = 0.0;
 }
 
 void lid_driven_cavity(std::unique_ptr<double[]> &r, std::unique_ptr<double[]> &u, std::unique_ptr<double[]> &v)
@@ -54,9 +55,10 @@ void init_equilibrium(std::unique_ptr<double[]> &f0, std::unique_ptr<double[]> &
     {
         for (unsigned int x = 0; x < NX; ++x)
         {
-            double rho = r[scalar_index(x, y)];
-            double ux = u[scalar_index(x, y)];
-            double uy = v[scalar_index(x, y)];
+            size_t si = scalar_index(x, y);
+            double rho = r[si];
+            double ux = u[si];
+            double uy = v[si];
 
             // temporary variables
             double w0r = w0 * rho;
