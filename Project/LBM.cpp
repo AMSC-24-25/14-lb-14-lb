@@ -16,6 +16,7 @@
 #include <memory>
 #include <omp.h>
 #include "LBM.h"
+#include <omp.h>
 
 inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double &u, double &v)
 {

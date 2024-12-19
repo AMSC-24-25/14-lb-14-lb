@@ -16,8 +16,10 @@
 #ifndef __LBM_H
 #define __LBM_H
 
-const unsigned int scale = 3;
-const unsigned int NX = 128 * scale;
+const bool bTest = false;
+
+const unsigned int scale = 2;
+const unsigned int NX = 32 * scale;
 const unsigned int NY = NX;
 
 // The number of directions in the lattice
