@@ -87,9 +87,9 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
         std::cerr << "Incompatible size and velocity set dimension!! The problem is "  << v->getD() << "D\n";
         exit(1);
     }    
-    population = (double*) malloc(sizeof(double) * N.x * N.y * N.z * v->getQ() * 2);
-    rho = (double*) malloc(sizeof(double) * N.x * N.y * N.z);
-    u = (double*) malloc(sizeof(double) * N.x * N.y * N.z * v->getD());
+    population = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getQ() * 2);
+    rho = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z);
+    u = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getD());
 }
 
 void LBM::applyInitial(int x, int y, int z)

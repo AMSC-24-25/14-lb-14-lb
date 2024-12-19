@@ -65,9 +65,9 @@ class LBM
         bool quiet;
         int step = 0;
 
-        double *population;
-        double *rho;
-        double *u;
+        std::unique_ptr<double[]> population;
+        std::unique_ptr<double[]> rho;
+        std::unique_ptr<double[]> u;
 
     public:
         void init_equilibrium();
