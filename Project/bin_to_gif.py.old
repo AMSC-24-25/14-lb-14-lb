@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import pandas as pd
+import os
+
+# Load simulation parameters
+params = pd.read_csv('simulation_parameters.csv')
+NX, NY, NSTEPS, NSAVE = params.iloc[0][['NX', 'NY', 'NSTEPS', 'NSAVE']].astype(int).values
+UMAX = params.iloc[0]['UMAX']
+
+# Define a function to load binary files
+def load_field(filename, nx, ny):
+    if os.path.exists(filename):
+        data = np.fromfile(filename, dtype=np.float64)
+        if data.size == nx * ny:
+            print(f"Loaded {filename}: min={data.min()}, max={data.max()}")
+            return data.reshape((ny, nx))
+        else:
+            print(f"Error: File {filename} has incorrect size {data.size}, expected {nx * ny}")
+    else:
+        print(f"File {filename} not found.")
+    return np.zeros((ny, nx))
+
+# Create directories for saving GIFs if needed
+os.makedirs('gifs', exist_ok=True)
+
+# Initialize the figure for rho
+fig_rho, ax_rho = plt.subplots()
+rho_img = ax_rho.imshow(np.zeros((NY, NX)), cmap='viridis', origin='lower', vmin=0, vmax=2)
+ax_rho.set_title('Density (rho)')
+
+# Update function for rho
+def update_rho(n):
+    filename = f'../bin_results/rho{n:04d}.bin'
+    rho_data = load_field(filename, NX, NY)
+    rho_img.set_array(rho_data)
+    
+    ax_rho.set_title(f'Density (rho) - Step {n}')
+    return rho_img,
+
+# Create animation for rho
+ani_rho = animation.FuncAnimation(fig_rho, update_rho, frames=range(0, int(NSTEPS), int(NSAVE)), blit=True)
+ani_rho.save('gifs/rho_evolution.gif', fps=5, writer='imagemagick')
+plt.close(fig_rho)
+
+# Initialize the figure for u
+fig_u, ax_u = plt.subplots()
+
+
+u_img = ax_u.imshow(np.zeros((NY, NX)), cmap='coolwarm', origin='lower', vmin=0, vmax=UMAX)
+colorbar_ax_u = fig_u.colorbar(u_img, ax=ax_u, orientation='vertical')
+colorbar_ax_u.set_label('Velocity (u)')
+
+
+
+
+ax_u.set_title('Velocity (u)')
+
+# Update function for u
+def update_u(n):
+    ux_filename = f'../bin_results/ux{n:04d}.bin'
+    uy_filename = f'../bin_results/uy{n:04d}.bin'
+    ux_data = load_field(ux_filename, NX, NY)
+    uy_data = load_field(uy_filename, NX, NY)
+    magnitude = np.sqrt(ux_data**2 + uy_data**2)
+    u_img.set_array(magnitude)
+    u_img.set_clim(vmin=0, vmax=UMAX)
+        
+    ax_u.set_title(f'Velocity Magnitude (|u|) - Step {n}')
+    return u_img,
+
+# Create animation for u
+ani_u = animation.FuncAnimation(fig_u, update_u, frames=range(0, int(NSTEPS), int(NSAVE)), blit=True)
+ani_u.save('gifs/u_evolution.gif', fps=5, writer='imagemagick')
+plt.close(fig_u)
