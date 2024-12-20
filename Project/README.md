@@ -3,6 +3,14 @@
 ## Overview
 This project implements a Lattice Boltzmann Method (LBM) simulation, a numerical method widely used in fluid dynamics and related computational physics applications. The project is written in C++ and includes core functionalities to initialize the simulation, handle collisions and streaming, apply boundary conditions, and visualize results.
 
+## Algorithm
+The Project follows the algorithm idea described in "An Introduction to the Lattice Boltzmann Method: A
+Numerical Method for Complex Boundary and Moving Boundary Flows." (Inamuro, T., Yoshino, M., & Suzuki, K.)
+
+<p align="center">
+  <img width="600" alt="" src="extra/algorithm.png">
+</p>
+
 ## Features
 - Configurable grid size and simulation parameters.
 - Implements core LBM operations (collision, streaming, boundary conditions).

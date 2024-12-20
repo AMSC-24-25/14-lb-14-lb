@@ -201,7 +201,6 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
     }
 }
 
-///////////////////////CHECK THIS!!!!!!!!!!!!!!!!!!!/////////////////////////
 void compute_flow_properties(unsigned int t, double *r, double *u, double *v, double *prop)
 {
     // prop must point to space for 4 doubles:
@@ -282,7 +281,7 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
     // close file
     fclose(fout);
     
-    if(ferror(fout))
+    if(ferror(fout) && !quiet)
     {
         fprintf(stderr,"Error saving to %s\n",filename);
         perror("");
@@ -293,27 +292,3 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
             printf("Saved to %s\n",filename);
     }
 }
-
-/*
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy)
-{
-    FILE *csv_file = fopen(filename, "a");
-    if (csv_file == NULL)
-    {
-        fprintf(stderr, "Errore nell'apertura del file CSV %s\n", filename);
-        return;
-    }
-
-    // Write info for every node
-    for (unsigned int y = 0; y < NY; ++y)
-    {
-        for (unsigned int x = 0; x < NX; ++x)
-        {
-            size_t idx = scalar_index(x, y);
-            fprintf(csv_file, "%u,%u,%u,%.6f,%.6f,%.6f\n", t, x, y, rho[idx], ux[idx], uy[idx]);
-        }
-    }
-
-    fclose(csv_file);
-}
-*/
