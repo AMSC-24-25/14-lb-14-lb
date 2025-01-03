@@ -4,23 +4,22 @@
 #include "LBM.h"
 #include <omp.h>
 
-//Questi non sono array, ma puntatori a singoli valori double!!!!
-inline void lid_driven_cavity(unsigned int x, unsigned int y, double *r, double *u, double *v) {
+inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double &u, double &v) {
 
     
-    *r = rho0; //Set initial density constant
+    r = rho0; //Set initial density constant
     
     // Inizialize velocity
     if (y == NY - 1) // Top lid
     {
-        *u = u_max; // Constant value on top lid
+        u = u_max; // Constant value on top lid
     }
     else // All other points
     {
-        *u = 0.0;
+        u = 0.0;
     }
 
-    *v = 0.0;
+    v = 0.0;
 }
 
 
@@ -32,7 +31,7 @@ void lid_driven_cavity(double *r, double *u, double *v)
         for (unsigned int x = 0; x < NX; ++x)
         {
             size_t sidx = scalar_index(x, y);
-            lid_driven_cavity(x, y, &r[sidx], &u[sidx], &v[sidx]);
+            lid_driven_cavity(x, y, r[sidx], u[sidx], v[sidx]);
         }
     }
 }
@@ -233,7 +232,7 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
             E += rho*(ux*ux + uy*uy);
             
             double rhoa, uxa, uya;
-            lid_driven_cavity(x, y, &rhoa, &uxa, &uya);
+            lid_driven_cavity(x, y, rhoa, uxa, uya);
             
             sumrhoe2 += (rho-rhoa)*(rho-rhoa);
             sumuxe2  += (ux-uxa)*(ux-uxa);
