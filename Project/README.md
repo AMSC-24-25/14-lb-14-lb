@@ -26,6 +26,7 @@ Numerical Method for Complex Boundary and Moving Boundary Flows." (Inamuro, T., 
 - OpenMP dev package.
 
 ## Compilation and Execution
+0. install nvcc, this is easily achieved by [conda](https://anaconda.org/nvidia/cuda-nvcc)
 1. Compile the project using the included bash file:
    ```bash
    ./compile.sh
