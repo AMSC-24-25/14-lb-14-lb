@@ -13,6 +13,7 @@
 #include <memory>
 #include <functional>
 #include <vector>
+#include <exception>
 #include <Eigen/Dense>
 
 #ifndef __LBM_H
@@ -89,9 +90,11 @@ class LBM
         void applyInitial(int x, int y, int z);
         void applyBoundary(int x, int y, int z, Eigen::VectorXd& f);
 
+        inline int check_coordinates(int x, int y, int z);
         inline int index_r(int x, int y, int z);
         inline int index_u(int x, int y, int z);
         inline int index_f(int x, int y, int z);
+        
 
 
 
@@ -158,3 +161,20 @@ void LBM::savePopulation(int x, int y, int z, const Eigen::VectorXd& population)
 int LBM::index_r(int x, int y, int z) { return (N.y * z + y) * N.x + x; }
 int LBM::index_u(int x, int y, int z) { return index_r(x,y,z) * v->getD(); }
 int LBM::index_f(int x, int y, int z) { return index_r(x,y,z) * v->getQ(); }
+
+
+int LBM::check_coordinates(int x, int y, int z)
+{
+    if(x >= N.x || x < 0)
+    {
+        throw std::out_of_range(std::string{"Invalid x coordinate\n"});
+    }
+    if(y < 0 || y >= N.y)
+    {
+        throw std::out_of_range(std::string{"Invalid y coordinate\n"});
+    }
+    if(z < 0 || z >= N.z)
+    {
+        throw std::out_of_range(std::string{"Invalid z coordinate\n"});
+    }
+}

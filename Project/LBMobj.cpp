@@ -79,13 +79,11 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
     v = std::make_unique<VelocitySet>(vSet);
     if(N.x == 0 || N.y == 0 || N.z == 0)
     {
-        std::cerr << "Setting problem size to zero!!\n";
-        exit(1);
+        throw std::invalid_argument(std::string{"Setting problem size to zero!!\n"});
     }
     if((v->getD() == 1 && (N.y != 1 || N.z != 1)) || (v->getD() == 2 && N.z != 1))
     {
-        std::cerr << "Incompatible size and velocity set dimension!! The problem is "  << v->getD() << "D\n";
-        exit(1);
+        throw std::invalid_argument(std::string{"Incompatible size and velocity set dimension!!\n"});
     }    
     population = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getQ() * 2);
     rho = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z);
@@ -99,5 +97,5 @@ void LBM::applyInitial(int x, int y, int z)
 
 void LBM::applyBoundary(int x, int y, int z, VectorXd& f)
 {
-    for(auto bc : BoundaryConditions) bc(x,y,z, f, *this);
+    for(std::function<void (int, int, int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
 }
