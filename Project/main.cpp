@@ -4,6 +4,7 @@
 #include "seconds.h"
 #include "LBM.h"
 #include <utility>
+
 int main(int argc, char* argv[])
 {
     printf("Simulating Lid Driven cavity\n");
@@ -43,13 +44,14 @@ int main(int argc, char* argv[])
     init_equilibrium(f0,f1,rho,ux,uy);
 
     // Name of CSV
-    const char *csv_filename = "simulation_data.csv";
+    const char *csv_filename = "simulation_parameters.csv";
 
     // Write head of CSV
     FILE *csv_file = fopen(csv_filename, "w");
     if (csv_file != NULL)
     {
-        fprintf(csv_file, "Timestep,X,Y,Density,Velocity_U,Velocity_V\n");
+        fprintf(csv_file, "NX,NY,NSTEPS,NSAVE,UMAX\n");
+        fprintf(csv_file, "%u,%u,%u,%u,%lf\n", NX, NY, NSTEPS, NSAVE, u_max);
         fclose(csv_file);
     }
     else
@@ -57,8 +59,9 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Errore nell'apertura del file CSV %s\n", csv_filename);
     }
 
-    // Save data in CSV file
-    save_to_csv(csv_filename, 0, rho, ux, uy);
+    save_scalar("rho", rho, 0);
+    save_scalar("ux", ux, 0);
+    save_scalar("uy", uy, 0);
     
 
     if(computeFlowProperties)
@@ -81,15 +84,14 @@ int main(int argc, char* argv[])
         stream_collide_save(f0,f1,f2,rho,ux,uy,need_scalars);
 
         
-
-        
         if(save)
         {
             #pragma omp taskwait
-            // Save data in CSV file
             #pragma omp task 
             {
-                save_to_csv(csv_filename, n + 1, rho, ux, uy);
+                    save_scalar("rho", rho, n + 1);
+                    save_scalar("ux", ux, n + 1);
+                    save_scalar("uy", uy, n + 1);
             }
         }
         

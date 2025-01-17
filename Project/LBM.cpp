@@ -1,38 +1,25 @@
-/* This code accompanies
- *   The Lattice Boltzmann Method: Principles and Practice
- *   T. Krüger, H. Kusumaatmaja, A. Kuzmin, O. Shardt, G. Silva, E.M. Viggen
- *   ISBN 978-3-319-44649-3 (Electronic) 
- *        978-3-319-44647-9 (Print)
- *   http://www.springer.com/978-3-319-44647-9
- *
- * This code is provided under the MIT license. See LICENSE.txt.
- *
- * Author: Orest Shardt
- *
- */
 #include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-
 #include "LBM.h"
+#include <omp.h>
 
-//Questi non sono array, ma puntatori a singoli valori double!!!!
-inline void lid_driven_cavity(unsigned int x, unsigned int y, double *r, double *u, double *v) {
+inline void lid_driven_cavity(unsigned int x, unsigned int y, double &r, double &u, double &v) {
 
     
-    *r = rho0; //Set initial density constant
+    r = rho0; //Set initial density constant
     
     // Inizialize velocity
     if (y == NY - 1) // Top lid
     {
-        *u = u_max; // Constant value on top lid
-        *v = 0.0;
+        u = u_max; // Constant value on top lid
     }
     else // All other points
     {
-        *u = 0.0;
-        *v = 0.0;
+        u = 0.0;
     }
+
+    v = 0.0;
 }
 
 
@@ -44,7 +31,7 @@ void lid_driven_cavity(double *r, double *u, double *v)
         for (unsigned int x = 0; x < NX; ++x)
         {
             size_t sidx = scalar_index(x, y);
-            lid_driven_cavity(x, y, &r[sidx], &u[sidx], &v[sidx]);
+            lid_driven_cavity(x, y, r[sidx], u[sidx], v[sidx]);
         }
     }
 }
@@ -57,9 +44,10 @@ void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
     {
         for(unsigned int x = 0; x < NX; ++x)
         {
-            double rho = r[scalar_index(x,y)];
-            double ux  = u[scalar_index(x,y)];
-            double uy  = v[scalar_index(x,y)];
+            size_t si = scalar_index(x, y);
+            double rho = r[si];
+            double ux = u[si];
+            double uy = v[si];
 
             // temporary variables
             double w0r = w0*rho;
@@ -212,7 +200,6 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
     }
 }
 
-///////////////////////CHECK THIS!!!!!!!!!!!!!!!!!!!/////////////////////////
 void compute_flow_properties(unsigned int t, double *r, double *u, double *v, double *prop)
 {
     // prop must point to space for 4 doubles:
@@ -245,7 +232,7 @@ void compute_flow_properties(unsigned int t, double *r, double *u, double *v, do
             E += rho*(ux*ux + uy*uy);
             
             double rhoa, uxa, uya;
-            lid_driven_cavity(x, y, &rhoa, &uxa, &uya);
+            lid_driven_cavity(x, y, rhoa, uxa, uya);
             
             sumrhoe2 += (rho-rhoa)*(rho-rhoa);
             sumuxe2  += (ux-uxa)*(ux-uxa);
@@ -274,18 +261,18 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
 {
     // assume reasonably-sized file names
     char filename[128];
-    char format[16];
+    char format[32];
     
     // compute maximum number of digits
     int ndigits = floor(log10((double)NSTEPS)+1.0);
     
     // generate format string
     // file name format is name0000nnn.bin
-    sprintf(format,"%%s%%0%dd.bin",ndigits);
+    sprintf(format,"../bin_results/%%s%%0%dd.bin",ndigits);
     sprintf(filename,format,name,n);
     
     // open file for writing
-    FILE *fout = fopen(filename,"wb+");
+    FILE *fout = fopen(filename, "wb+");
     
     // write data
     fwrite(scalar,1,mem_size_scalar,fout);
@@ -293,7 +280,7 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
     // close file
     fclose(fout);
     
-    if(ferror(fout))
+    if(ferror(fout) && !quiet)
     {
         fprintf(stderr,"Error saving to %s\n",filename);
         perror("");
@@ -303,26 +290,4 @@ void save_scalar(const char* name, double *scalar, unsigned int n)
         if(!quiet)
             printf("Saved to %s\n",filename);
     }
-}
-
-void save_to_csv(const char* filename, unsigned int t, double *rho, double *ux, double *uy)
-{
-    FILE *csv_file = fopen(filename, "a");
-    if (csv_file == NULL)
-    {
-        fprintf(stderr, "Errore nell'apertura del file CSV %s\n", filename);
-        return;
-    }
-
-    // Write info for every node
-    for (unsigned int y = 0; y < NY; ++y)
-    {
-        for (unsigned int x = 0; x < NX; ++x)
-        {
-            size_t idx = scalar_index(x, y);
-            fprintf(csv_file, "%u,%u,%u,%.6f,%.6f,%.6f\n", t, x, y, rho[idx], ux[idx], uy[idx]);
-        }
-    }
-
-    fclose(csv_file);
 }
