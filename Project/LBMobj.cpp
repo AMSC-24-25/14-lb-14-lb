@@ -71,6 +71,8 @@ void LBM::stream_collide_save()
             }
         }
     }
+
+    this->step++;
 }
 
 
@@ -98,4 +100,14 @@ void LBM::applyInitial(int x, int y, int z)
 void LBM::applyBoundary(int x, int y, int z, VectorXd& f)
 {
     for(std::function<void (int, int, int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
+}
+
+void LBM::setInitialCondition(std::function<void(int,int,int, LBM&)> initial_condition)
+{
+    this->InitialCondition = initial_condition;
+}
+
+void LBM::addBoundaryCondition(std::function<void(int,int,int, Eigen::VectorXd&, LBM&)> boundary)
+{
+    this->BoundaryConditions.push_back(boundary);
 }

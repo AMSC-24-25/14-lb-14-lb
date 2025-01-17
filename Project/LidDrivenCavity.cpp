@@ -1,16 +1,9 @@
-#include "LBMobj.hpp"
+#include "LidDrivenCavity.hpp"
 
 using Eigen::VectorXd;
 
 const double Re = 100.0;
 const double rho0 = 1.0;
-
-void LidDrivenCavityInitial(int x, int y, int z, LBM& l);
-//void BounceBackNorth(int x, int y, int z, Eigen::VectorXd& f, LBM& l);
-void BounceBackEast(int x, int y, int z, Eigen::VectorXd& f, LBM& l);
-void BounceBackWest(int x, int y, int z, Eigen::VectorXd& f, LBM& l);
-void BounceBackSouth(int x, int y, int z, Eigen::VectorXd& f, LBM& l);
-void MovingWallNorth(int x, int y, int z, Eigen::VectorXd& f, LBM& l);
 
 void LidDrivenCavityInitial(int x, int y, int z, LBM& l)
 {

@@ -74,7 +74,10 @@ class LBM
         void init_equilibrium();
         void stream_collide_save();
 
-        LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+        LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+
+        void setInitialCondition(std::function<void(int,int,int, LBM&)> InitialCondition);
+        void addBoundaryCondition(std::function<void(int,int,int, Eigen::VectorXd&, LBM&)>);
 
         inline const double get_rho(int x, int y, int z);
         inline void set_rho(int x, int y, int z, double rho);
@@ -127,7 +130,7 @@ void LBM::set_u(int x, int y, int z, const Eigen::VectorXd& u)
 Eigen::VectorXd LBM::getPopulation(int x, int y, int z)
 {
     Eigen::VectorXd p( v->getQ() );
-    const Eigen::MatrixXd& c = v->get_c();
+    //const Eigen::MatrixXd& c = v->get_c();
     for(int i = 0; i < v->getQ(); ++i)
     {
         p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (~step & 1) + i];
