@@ -6,6 +6,7 @@ using Eigen::ArrayXd;
 
 void LBM::init_equilibrium()
 {
+    std::cout << "Initializing simulation..." << std::endl;
 
     #pragma omp parallel for default(none) schedule(static)
     for(unsigned int x = 0; x < this->N.x; ++x)
@@ -21,16 +22,19 @@ void LBM::init_equilibrium()
                 double unorm = u.norm();
                 double omusq = 1.0 - 1.5*(unorm * unorm);
                 ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd f = rho * this->v->get_w().array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
+                VectorXd f = (rho * this->v->get_w()).array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
 
                 savePopulation(x,y,z, f);
             }
         }
     }
+
+    std::cout << "Initialization completed." << std::endl;
 }
 
 void LBM::stream_collide_save()
 {
+    std::cout << "Simulating step " << this->step << "...  ";
         // useful constants
     const double tauinv = 2.0/(6.0*this->nu+1.0); // 1/tau
     const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
@@ -73,6 +77,7 @@ void LBM::stream_collide_save()
     }
 
     this->step++;
+    std::cout << " Completed." << std::endl;
 }
 
 
@@ -90,6 +95,13 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
     population = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getQ() * 2);
     rho = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z);
     u = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getD());
+    
+    if(!quiet)
+    {
+        std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << "lattice." << std::endl;
+        std::cout << "The velocity has " << v->getQ() << "components." << std::endl;
+        std::cout << "Kinematic viscosity was set to " << nu << "." << std::endl;
+    }
 }
 
 void LBM::applyInitial(unsigned int x, unsigned int y, unsigned int z)

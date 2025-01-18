@@ -63,7 +63,7 @@ class LBM
         
 
         bool computeFlowProperties;
-        bool quiet;
+        bool quiet = false;
         unsigned int step = 0;
 
         std::unique_ptr<double[]> population;
@@ -84,6 +84,9 @@ class LBM
         inline const Eigen::VectorXd get_u(unsigned int x, unsigned int y, unsigned int z);
         inline void set_u(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& u);
         inline Eigen::VectorXd getPopulation(unsigned int x, unsigned int y, unsigned int z);
+
+        inline void setVerbose();
+        inline void setQuiet();
     
     private:
     
@@ -181,4 +184,10 @@ unsigned int LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int
         throw std::out_of_range(std::string{"Invalid z coordinate\n"});
     }
 }
+
+
+inline void LBM::setVerbose() { quiet = false; }
+inline void LBM::setQuiet() { quiet = true; }
+
+
 #endif /* __LBM_H */
