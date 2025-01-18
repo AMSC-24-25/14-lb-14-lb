@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "seconds.h"
 #include "LBMobj.hpp"
 #include "LidDrivenCavity.hpp"
-#include <utility>
 
 const unsigned int scale = 2;
 const unsigned int NX = 128*scale;
@@ -26,7 +22,7 @@ int main(int argc, char* argv[])
     lbm.addBoundaryCondition(BounceBackSouth);
     lbm.addBoundaryCondition(MovingWallNorth);
 
-    double start = seconds();
+    //double start = seconds();
     #pragma omp parallel master 
     {
 // main simulation loop; take NSTEPS time steps
@@ -38,8 +34,8 @@ int main(int argc, char* argv[])
     }
     }
     
-    double end = seconds();
-    double runtime = end-start;
+    //double end = seconds();
+    //double runtime = end-start;
 
  
     return 0;

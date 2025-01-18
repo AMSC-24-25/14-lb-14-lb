@@ -15,3 +15,5 @@ rm -f LBM.o seconds.o main.o
 # for mac:
 # g++ LBM.o seconds.o main.o -o sim
 
+#classes at the moment
+#g++ -Wall -I ${mkEigenInc} -fopenmp LBMobj.hpp LBMobj.cpp VelocitySet.cpp LidDrivenCavity.hpp LidDrivenCavity.cpp  main.cpp -o ldc_sim

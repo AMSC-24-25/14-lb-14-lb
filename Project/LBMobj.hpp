@@ -28,29 +28,29 @@ class LBM
                 enum StandardSet { D1Q3, D2Q9, D3Q15, D3Q19, D3Q27 };
             
             protected: 
-                const int D;
-                const int Q;
+                const unsigned int D;
+                const unsigned int Q;
                 Eigen::MatrixXd c;
                 Eigen::VectorXd w;
 
             public:
                 VelocitySet(StandardSet set);
-                const int getD();
-                const int getQ();
+                const unsigned int getD();
+                const unsigned int getQ();
                 const Eigen::MatrixXd& get_c();
                 const Eigen::VectorXd& get_w();
 
             private:
-                static const int fromStdD(StandardSet std);
-                static const int fromStdQ(StandardSet std);
+                static const unsigned int fromStdD(StandardSet std);
+                static const unsigned int fromStdQ(StandardSet std);
         };
 
-    std::function<void(int,int,int, LBM&)> InitialCondition;
-    std::vector<std::function<void(int,int,int, Eigen::VectorXd&, LBM&)>> BoundaryConditions;
+    std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition;
+    std::vector<std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>> BoundaryConditions;
         struct dimensions {
-            int x;
-            int y;
-            int z;
+            unsigned int x;
+            unsigned int y;
+            unsigned int z;
         } const N;
         
         const double nu;
@@ -64,7 +64,7 @@ class LBM
 
         bool computeFlowProperties;
         bool quiet;
-        int step = 0;
+        unsigned int step = 0;
 
         std::unique_ptr<double[]> population;
         std::unique_ptr<double[]> rho;
@@ -76,42 +76,42 @@ class LBM
 
         LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
 
-        void setInitialCondition(std::function<void(int,int,int, LBM&)> InitialCondition);
-        void addBoundaryCondition(std::function<void(int,int,int, Eigen::VectorXd&, LBM&)>);
+        void setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition);
+        void addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>);
 
-        inline const double get_rho(int x, int y, int z);
-        inline void set_rho(int x, int y, int z, double rho);
-        inline const Eigen::VectorXd get_u(int x, int y, int z);
-        inline void set_u(int x, int y, int z, const Eigen::VectorXd& u);
-        inline Eigen::VectorXd getPopulation(int x, int y, int z);
+        inline const double get_rho(unsigned int x, unsigned int y, unsigned int z);
+        inline void set_rho(unsigned int x, unsigned int y, unsigned int z, double rho);
+        inline const Eigen::VectorXd get_u(unsigned int x, unsigned int y, unsigned int z);
+        inline void set_u(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& u);
+        inline Eigen::VectorXd getPopulation(unsigned int x, unsigned int y, unsigned int z);
     
     private:
     
-        inline Eigen::VectorXd populationAdjacent(int x, int y, int z);
-        inline void savePopulation(int x, int y, int z, const Eigen::VectorXd& population);
+        inline Eigen::VectorXd populationAdjacent(unsigned int x, unsigned int y, unsigned int z);
+        inline void savePopulation(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population);
 
-        void applyInitial(int x, int y, int z);
-        void applyBoundary(int x, int y, int z, Eigen::VectorXd& f);
+        void applyInitial(unsigned int x, unsigned int y, unsigned int z);
+        void applyBoundary(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f);
 
-        inline int check_coordinates(int x, int y, int z);
-        inline int index_r(int x, int y, int z);
-        inline int index_u(int x, int y, int z);
-        inline int index_f(int x, int y, int z);
+        inline unsigned int check_coordinates(unsigned int x, unsigned int y, unsigned int z);
+        inline unsigned int index_r(unsigned int x, unsigned int y, unsigned int z);
+        inline unsigned int index_u(unsigned int x, unsigned int y, unsigned int z);
+        inline unsigned int index_f(unsigned int x, unsigned int y, unsigned int z);
         
 
 
 
 };
 
-#endif /* __LBM_H */
 
-const double LBM::get_rho(int x, int y, int z) { return rho[index_r(x,y,z)]; }
-void LBM::set_rho(int x, int y, int z, double rho) { this->rho[index_r(x,y,z)] = rho; }
 
-const Eigen::VectorXd LBM::get_u(int x, int y, int z)
+const double LBM::get_rho(unsigned int x, unsigned int y, unsigned int z) { return rho[index_r(x,y,z)]; }
+void LBM::set_rho(unsigned int x, unsigned int y, unsigned int z, double rho) { this->rho[index_r(x,y,z)] = rho; }
+
+const Eigen::VectorXd LBM::get_u(unsigned int x, unsigned int y, unsigned int z)
 {
     Eigen::VectorXd u(v->getD());
-    for(int i = 0; i < v->getD(); ++i)
+    for(unsigned int i = 0; i < v->getD(); ++i)
     {
         u(i) = this->u[index_u(x,y,z) + i];
     } 
@@ -119,19 +119,19 @@ const Eigen::VectorXd LBM::get_u(int x, int y, int z)
     return u;
 }
 
-void LBM::set_u(int x, int y, int z, const Eigen::VectorXd& u)
+void LBM::set_u(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& u)
 {
-    for(int i = 0; i < v->getD(); ++i)
+    for(unsigned int i = 0; i < v->getD(); ++i)
     {
         this->u[index_u(x,y,z) + i] = u(i);
     } 
 }
 
-Eigen::VectorXd LBM::getPopulation(int x, int y, int z)
+Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int z)
 {
     Eigen::VectorXd p( v->getQ() );
     //const Eigen::MatrixXd& c = v->get_c();
-    for(int i = 0; i < v->getQ(); ++i)
+    for(unsigned int i = 0; i < v->getQ(); ++i)
     {
         p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (~step & 1) + i];
     } 
@@ -139,34 +139,34 @@ Eigen::VectorXd LBM::getPopulation(int x, int y, int z)
 }
 
 
-Eigen::VectorXd LBM::populationAdjacent(int x, int y, int z)
+Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned int z)
 {
     Eigen::VectorXd adj( v->getQ() );
     const Eigen::MatrixXd& c = v->get_c();
-    for(int i = 0; i < v->getQ(); ++i)
+    for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        int x_adj = x + c(i, 0);
-        int y_adj = y + (v->getD() > 1)? c(i, 1) : 0;
-        int z_adj = z + (v->getD() == 3)? c(i, 2) : 0;
+        unsigned int x_adj = x + c(i, 0);
+        unsigned int y_adj = y + (v->getD() > 1)? c(i, 1) : 0;
+        unsigned int z_adj = z + (v->getD() == 3)? c(i, 2) : 0;
         adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (~step & 1) + i];
     } 
     return adj;
 }
 
-void LBM::savePopulation(int x, int y, int z, const Eigen::VectorXd& population)
+void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
 {
-    for(int i = 0; i < v->getQ(); ++i)
+    for(unsigned int i = 0; i < v->getQ(); ++i)
     {
         this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) + i] = population(i);
     }     
 }
 
-int LBM::index_r(int x, int y, int z) { return (N.y * z + y) * N.x + x; }
-int LBM::index_u(int x, int y, int z) { return index_r(x,y,z) * v->getD(); }
-int LBM::index_f(int x, int y, int z) { return index_r(x,y,z) * v->getQ(); }
+unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { return (N.y * z + y) * N.x + x; }
+unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { return index_r(x,y,z) * v->getD(); }
+unsigned int LBM::index_f(unsigned int x, unsigned int y, unsigned int z) { return index_r(x,y,z) * v->getQ(); }
 
 
-int LBM::check_coordinates(int x, int y, int z)
+unsigned int LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int z)
 {
     if(x >= N.x || x < 0)
     {
@@ -181,3 +181,4 @@ int LBM::check_coordinates(int x, int y, int z)
         throw std::out_of_range(std::string{"Invalid z coordinate\n"});
     }
 }
+#endif /* __LBM_H */

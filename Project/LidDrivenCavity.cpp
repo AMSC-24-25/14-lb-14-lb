@@ -5,7 +5,7 @@ using Eigen::VectorXd;
 const double Re = 100.0;
 const double rho0 = 1.0;
 
-void LidDrivenCavityInitial(int x, int y, int z, LBM& l)
+void LidDrivenCavityInitial(unsigned int x, unsigned int y, unsigned int z, LBM& l)
 {
     l.set_rho(x,y,z, rho0);
     
@@ -20,7 +20,7 @@ void LidDrivenCavityInitial(int x, int y, int z, LBM& l)
     l.set_u(x,y,z, u);
 }
 
-void BounceBackEast(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
+void BounceBackEast(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
     if(x == (l.N.x - 1))
     {
@@ -31,7 +31,7 @@ void BounceBackEast(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
     }
 }
 
-void BounceBackWest(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
+void BounceBackWest(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
     if(x == 0)
     {
@@ -42,7 +42,7 @@ void BounceBackWest(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
     }
 }
 
-void BounceBackSouth(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
+void BounceBackSouth(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
     if(y == 0)
     {
@@ -53,7 +53,7 @@ void BounceBackSouth(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
     }
 }
 
-void MovingWallNorth(int x, int y, int z, Eigen::VectorXd& f, LBM& l)
+void MovingWallNorth(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
     if(y == (l.N.y - 1))
     {

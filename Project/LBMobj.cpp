@@ -7,7 +7,7 @@ using Eigen::ArrayXd;
 void LBM::init_equilibrium()
 {
 
-    #pragma omp parallel for default(none) shared(this) schedule(static)
+    #pragma omp parallel for default(none) schedule(static)
     for(unsigned int x = 0; x < this->N.x; ++x)
     {
         for(unsigned int y = 0; y < this->N.y; ++y)
@@ -21,7 +21,7 @@ void LBM::init_equilibrium()
                 double unorm = u.norm();
                 double omusq = 1.0 - 1.5*(unorm * unorm);
                 ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd f = this->v->get_w().array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
+                VectorXd f = rho * this->v->get_w().array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
 
                 savePopulation(x,y,z, f);
             }
@@ -35,7 +35,7 @@ void LBM::stream_collide_save()
     const double tauinv = 2.0/(6.0*this->nu+1.0); // 1/tau
     const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
 
-    #pragma omp parallel for default(none) shared(this, tauinv, omtauinv) schedule(static)
+    #pragma omp parallel for default(none) shared(tauinv, omtauinv) schedule(static)
     for(unsigned int x = 0; x < this->N.x; ++x)
     {
         for(unsigned int y = 0; y < this->N.y; ++y)
@@ -92,22 +92,22 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
     u = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getD());
 }
 
-void LBM::applyInitial(int x, int y, int z)
+void LBM::applyInitial(unsigned int x, unsigned int y, unsigned int z)
 {
     InitialCondition(x,y,z, *this );
 }
 
-void LBM::applyBoundary(int x, int y, int z, VectorXd& f)
+void LBM::applyBoundary(unsigned int x, unsigned int y, unsigned int z, VectorXd& f)
 {
-    for(std::function<void (int, int, int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
+    for(std::function<void (unsigned int, unsigned int, unsigned int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
 }
 
-void LBM::setInitialCondition(std::function<void(int,int,int, LBM&)> initial_condition)
+void LBM::setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> initial_condition)
 {
     this->InitialCondition = initial_condition;
 }
 
-void LBM::addBoundaryCondition(std::function<void(int,int,int, Eigen::VectorXd&, LBM&)> boundary)
+void LBM::addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)> boundary)
 {
     this->BoundaryConditions.push_back(boundary);
 }
