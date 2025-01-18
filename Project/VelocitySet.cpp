@@ -5,7 +5,7 @@ using Eigen::VectorXd;
 
 LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(set))
 {
-    c = MatrixXd(D, Q);
+    c = MatrixXd(Q, D);
     w = VectorXd(Q);
 
     if( Q == 9)
