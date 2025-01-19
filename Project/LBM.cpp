@@ -83,10 +83,6 @@ void init_equilibrium(double *f0, double *f1, double *r, double *u, double *v)
 
 void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *u, double *v, bool save)
 {
-    // useful constants
-    const double tauinv = 2.0/(6.0*nu+1.0); // 1/tau
-    const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
-
     #pragma omp parallel for default(none) \
        shared(f0,f1,f2,r,u,v,save) schedule(static)
     for(unsigned int y = 0; y < NY; ++y)
@@ -102,42 +98,44 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
             // 6 2 5
             // 3 0 1
             // 7 4 8
+
+            double ft[9];
             
-            double ft0 = f0[field0_index(x,y)];
+            ft[0] = f0[field0_index(x,y)];
             
             // load populations from adjacent nodes
-            double ft1 = f1[fieldn_index(xm1,y,  1)];
-            double ft2 = f1[fieldn_index(x,  ym1,2)];
-            double ft3 = f1[fieldn_index(xp1,y,  3)];
-            double ft4 = f1[fieldn_index(x,  yp1,4)];
-            double ft5 = f1[fieldn_index(xm1,ym1,5)];
-            double ft6 = f1[fieldn_index(xp1,ym1,6)];
-            double ft7 = f1[fieldn_index(xp1,yp1,7)];
-            double ft8 = f1[fieldn_index(xm1,yp1,8)];
+            ft[1] = f1[fieldn_index(xm1,y,  1)];
+            ft[2] = f1[fieldn_index(x,  ym1,2)];
+            ft[3] = f1[fieldn_index(xp1,y,  3)];
+            ft[4] = f1[fieldn_index(x,  yp1,4)];
+            ft[5] = f1[fieldn_index(xm1,ym1,5)];
+            ft[6] = f1[fieldn_index(xp1,ym1,6)];
+            ft[7] = f1[fieldn_index(xp1,yp1,7)];
+            ft[8] = f1[fieldn_index(xm1,yp1,8)];
 
              // Bounce back on Left wall
             if( x == 0)
             {
-                ft1 = f1[fieldn_index(x, y, 3)];
-                ft5 = f1[fieldn_index(x, y, 7)];
-                ft8 = f1[fieldn_index(x, y, 6)];
+                ft[1] = f1[fieldn_index(x, y, 3)];
+                ft[5] = f1[fieldn_index(x, y, 7)];
+                ft[8] = f1[fieldn_index(x, y, 6)];
             }
             
             // Bounce back on Right wall
             if (x == NX - 1)
             { 
-                ft3 = f1[fieldn_index(x, y, 1)];
-                ft7 = f1[fieldn_index(x, y, 5)];
-                ft6 = f1[fieldn_index(x, y, 8)];
+                ft[3] = f1[fieldn_index(x, y, 1)];
+                ft[7] = f1[fieldn_index(x, y, 5)];
+                ft[6] = f1[fieldn_index(x, y, 8)];
             }
 
             // Bounce back on Bottom wall
 
             if (y == 0)
             {
-            ft2 = f1[fieldn_index(x, y, 4)];
-            ft5 = f1[fieldn_index(x, y, 7)];
-            ft6 = f1[fieldn_index(x, y, 8)];
+            ft[2] = f1[fieldn_index(x, y, 4)];
+            ft[5] = f1[fieldn_index(x, y, 7)];
+            ft[6] = f1[fieldn_index(x, y, 8)];
             }
 
             //  Top lid (moving wall)
@@ -150,16 +148,16 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
 
             double coeff = 2.0 * wd * (1.0/cs) * (1.0/cs) * rho_top;
             
-            ft4 = f1[fieldn_index(x, y, 2)];
-            ft7 = f1[fieldn_index(x, y, 5)] - coeff * u_lid;
-            ft8 = f1[fieldn_index(x, y, 6)] + coeff * u_lid;
+            ft[4] = f1[fieldn_index(x, y, 2)];
+            ft[7] = f1[fieldn_index(x, y, 5)] - coeff * u_lid;
+            ft[8] = f1[fieldn_index(x, y, 6)] + coeff * u_lid;
             }            
             // compute moments
-            double rho = ft0+ft1+ft2+ft3+ft4+ft5+ft6+ft7+ft8;
+            double rho = ft[0]+ft[1]+ft[2]+ft[3]+ft[4]+ft[5]+ft[6]+ft[7]+ft[8];
             double rhoinv = 1.0/rho;
             
-            double ux = rhoinv*(ft1+ft5+ft8-(ft3+ft6+ft7));
-            double uy = rhoinv*(ft2+ft5+ft6-(ft4+ft7+ft8));
+            double ux = rhoinv*(ft[1]+ft[5]+ft[8]-(ft[3]+ft[6]+ft[7]));
+            double uy = rhoinv*(ft[2]+ft[5]+ft[6]-(ft[4]+ft[7]+ft[8]));
             
             // ALWAYS write to memory when needed
            
@@ -168,34 +166,52 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
                 v[scalar_index(x,y)] = uy;
             
             // temporary variables
-            double tw0r = tauinv*w0*rho; //   w[0]*rho/tau 
-            double twsr = tauinv*ws*rho; // w[1-4]*rho/tau
-            double twdr = tauinv*wd*rho; // w[5-8]*rho/tau
             double omusq = 1.0 - 1.5*(ux*ux+uy*uy); // 1-(3/2)u.u
             
             double tux = 3.0*ux;
             double tuy = 3.0*uy;
-            
-            
-            f0[field0_index(x,y)]    = omtauinv*ft0  + tw0r*(omusq);
-            
+
+            double feq[9];
+            feq[0] = w0*rho*omusq;
             double cidot3u = tux;
-            f2[fieldn_index(x,y,1)]  = omtauinv*ft1  + twsr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[1] = ws*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = tuy;
-            f2[fieldn_index(x,y,2)]  = omtauinv*ft2  + twsr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[2] = ws*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = -tux;
-            f2[fieldn_index(x,y,3)]  = omtauinv*ft3  + twsr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[3] = ws*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = -tuy;
-            f2[fieldn_index(x,y,4)]  = omtauinv*ft4  + twsr*(omusq + cidot3u*(1.0+0.5*cidot3u));
-            
+            feq[4] = ws*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = tux+tuy;
-            f2[fieldn_index(x,y,5)]  = omtauinv*ft5  + twdr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[5] = wd*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = tuy-tux;
-            f2[fieldn_index(x,y,6)]  = omtauinv*ft6  + twdr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[6] = wd*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = -(tux+tuy);
-            f2[fieldn_index(x,y,7)]  = omtauinv*ft7  + twdr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[7] = wd*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
             cidot3u = tux-tuy;
-            f2[fieldn_index(x,y,8)]  = omtauinv*ft8  + twdr*(omusq + cidot3u*(1.0+0.5*cidot3u));
+            feq[8] = wd*rho*(omusq + cidot3u*(1.0+0.5*cidot3u));
+
+            double fSym = ft[0];
+            double fAnti = 0;
+            double feqSym = feq[0];
+            double feqAnti = 0;
+            double symmetric = omgSym*(fSym-feqSym);
+            double antisymmetric = 0;
+            f0[field0_index(x,y)]    = ft[0] - symmetric;
+            
+            int idx[4] = {1, 2, 5, 6};
+            for (int j = 1; j < 4; j++) {
+                int i = idx[j];
+                int inv = invert_index(i);
+                fSym = (ft[i] + ft[inv])/2;
+                fAnti = (ft[i] - ft[inv])/2;
+                feqSym = (feq[i] + feq[inv])/2;
+                feqAnti = (feq[i] - feq[inv])/2;
+                symmetric = omgSym*(fSym-feqSym);
+                antisymmetric = omgAnti*(fAnti - feqAnti);
+                f2[fieldn_index(x,y,i)] = ft[i] - symmetric - antisymmetric;
+
+                f2[fieldn_index(x,y,inv)] = ft[inv] - symmetric + antisymmetric;
+            }
         }
     }
 }

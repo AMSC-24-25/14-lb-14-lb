@@ -18,6 +18,8 @@ const double w0 = 4.0/9.0;  // zero weight
 const double ws = 1.0/9.0;  // adjacent weight
 const double wd = 1.0/36.0; // diagonal weight
 
+
+
 //Re = u*N/(cs^2 * (tau - 1/2))
 //cs^2 = 1/3
 const double Re = 100.0;
@@ -25,7 +27,11 @@ const double Re = 100.0;
 // kinematic viscosity nu and the corresponding relaxation parameter tau
 const double nu = 1.0 / 6.0;
 const double tau = 3.0 * nu + 0.5;
-const double cs = 1.0 / 1.732;
+const double cs = 1.0 / 1.73205080756887729352;
+
+const double omgSym = 1/(nu/(cs*cs)+0.5);
+const double lambda = 0.25; //Provides the most stable simulations according to the book
+const double omgAnti = 1/(lambda*cs*cs/nu + 0.5);
 
 //Having large u_max destabilizes the simulation, higher NX is better
 const double u_max = Re/(6*NX);
@@ -64,6 +70,41 @@ inline size_t scalar_index(unsigned int x, unsigned int y)
 inline size_t fieldn_index(unsigned int x, unsigned int y, unsigned int d)
 {
     return (ndir-1)*(NX*y+x)+(d-1);
+}
+
+inline size_t invert_index(unsigned int d)
+{
+    switch(d) {
+        case 0:
+        return 0; //Opposite of rest is rest
+
+        case 1:
+        return 3;
+
+        case 2:
+        return 4;
+
+        case 3:
+        return 1;
+
+        case 4:
+        return 2;
+
+        case 5:
+        return 7;
+
+        case 6:
+        return 8;
+
+        case 7:
+        return 5;
+
+        case 8:
+        return 6;
+        
+        default:
+        return 0;
+    }
 }
 
 #endif /* __LBM_H */
