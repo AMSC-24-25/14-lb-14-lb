@@ -199,7 +199,7 @@ void stream_collide_save(double *f0, double *f1, double *f2, double *r, double *
             f0[field0_index(x,y)]    = ft[0] - symmetric;
             
             int idx[4] = {1, 2, 5, 6};
-            for (int j = 1; j < 4; j++) {
+            for (int j = 0; j < 4; j++) {
                 int i = idx[j];
                 int inv = invert_index(i);
                 fSym = (ft[i] + ft[inv])/2;
