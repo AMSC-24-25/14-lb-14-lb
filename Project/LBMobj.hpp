@@ -155,7 +155,7 @@ Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned
         unsigned int x_adj = x + c(i, 0);
         unsigned int y_adj = y + (v->getD() > 1)? c(i, 1) : 0;
         unsigned int z_adj = z + (v->getD() == 3)? c(i, 2) : 0;
-        if(x_adj < N.x && y_adj < N.y && z_adj < N.z){
+        if(x_adj >= 0 && x_adj < N.x && y_adj >= 0 && y_adj < N.y && z_adj >= 0 && z_adj < N.z){
             adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (~step & 1) + i];
         }
     }  
@@ -170,10 +170,20 @@ void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const E
     }     
 }
 
-unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { return (N.y * z + y) * N.x + x; }
-unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { return index_r(x,y,z) * v->getD(); }
-unsigned int LBM::index_f(unsigned int x, unsigned int y, unsigned int z) { return index_r(x,y,z) * v->getQ(); }
+unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { 
+    check_coordinates(x,y,z);
+    return (N.y * z + y) * N.x + x; 
+}
 
+unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { 
+    check_coordinates(x,y,z);
+    return index_r(x,y,z) * v->getD(); 
+}
+
+unsigned int LBM::index_f(unsigned int x, unsigned int y, unsigned int z) { 
+    check_coordinates(x,y,z);
+    return index_r(x,y,z) * v->getQ(); 
+}
 
 unsigned int LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int z)
 {
