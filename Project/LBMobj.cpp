@@ -92,14 +92,14 @@ LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(
     {
         throw std::invalid_argument(std::string{"Incompatible size and velocity set dimension!!\n"});
     }    
-    population = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getQ() * 2);
-    rho = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z);
-    u = std::make_unique<double[]>(sizeof(double) * N.x * N.y * N.z * v->getD());
+    population = std::make_unique<double[]>(N.x * N.y * N.z * v->getQ() * 2);
+    rho = std::make_unique<double[]>(N.x * N.y * N.z);
+    u = std::make_unique<double[]>(N.x * N.y * N.z * v->getD());
     
     if(!quiet)
     {
-        std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << "lattice." << std::endl;
-        std::cout << "The velocity has " << v->getQ() << "components." << std::endl;
+        std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << " lattice." << std::endl;
+        std::cout << "The velocity has " << v->getQ() << " components." << std::endl;
         std::cout << "Kinematic viscosity was set to " << nu << "." << std::endl;
     }
 }
