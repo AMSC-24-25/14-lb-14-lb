@@ -14,7 +14,7 @@
 #include <functional>
 #include <vector>
 #include <exception>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 #ifndef __LBM_H
 #define __LBM_H
