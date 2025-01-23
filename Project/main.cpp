@@ -4,11 +4,11 @@
 #include <iostream>
 
 const unsigned int scale = 2;
-const unsigned int NX = 128*scale;
+const unsigned int NX = 64*scale;
 const unsigned int NY = NX;
 const double nu = 1.0 / 6.0;
-const unsigned int NSTEPS = 3000*scale*scale;
-const unsigned int NSAVE  =  100*scale*scale;
+const unsigned int NSTEPS = 50*scale*scale + 1;
+const unsigned int NSAVE  =  10*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
 
 int main(int argc, char* argv[])
@@ -37,6 +37,11 @@ int main(int argc, char* argv[])
     {
 
         lbm.stream_collide_save();
+
+        if(n % NSAVE == 0)
+        {
+            lbm.saveToBin(n);
+        }
 
     }
     }

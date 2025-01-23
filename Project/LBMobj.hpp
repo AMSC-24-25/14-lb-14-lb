@@ -87,6 +87,10 @@ class LBM
 
         inline void setVerbose();
         inline void setQuiet();
+        
+        void saveToBin(unsigned int step);
+
+
     
     private:
     

@@ -37,14 +37,20 @@ const VectorXd& LBM::VelocitySet::get_w() { return this->w; }
 
 const unsigned int LBM::VelocitySet::fromStdD(StandardSet std)
 {
-    if(std == D2Q9) return 2;
-    //if(std == ...) ...
+    if(std == D1Q3) return 1;
+    else if(std == D2Q9) return 2;
+    else if(std == D3Q15) return 3;
+    else if(std == D3Q19) return 3;
+    else if(std == D3Q27) return 3;
     else return 0;
 }
 
 const unsigned int LBM::VelocitySet::fromStdQ(StandardSet std)
 {
-    if(std == D2Q9) return 9;
-    //if(std == ...) ...
+    if(std == D1Q3) return 3;
+    else if(std == D2Q9) return 9;
+    else if(std == D3Q15) return 15;
+    else if(std == D3Q19) return 19;
+    else if(std == D3Q27) return 27;
     else return 0;
 }

@@ -1,5 +1,8 @@
 #include "LBMobj.hpp"
 #include <iostream>
+#include <filesystem> 
+#include <iomanip>
+#include <fstream>
 
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
@@ -59,7 +62,7 @@ void LBM::stream_collide_save()
 
                 VectorXd cf_rhoinv = (this->v->get_c().transpose() * stream) * rhoinv;
                 VectorXd& u = cf_rhoinv;
-                set_u(x,y,z, u );
+                set_u(x,y,z, u);
 
                 //collision
                 double unorm = u.norm();
@@ -122,4 +125,59 @@ void LBM::setInitialCondition(std::function<void(unsigned int,unsigned int,unsig
 void LBM::addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)> boundary)
 {
     this->BoundaryConditions.push_back(boundary);
+}
+
+
+void LBM::saveToBin(unsigned int step)
+{
+    std::filesystem::create_directories("./bin_results");
+
+    // Allocate arrays for the entire domain
+    std::vector<double> u_x(N.x * N.y * N.z, 0.0);
+    std::vector<double> u_y(N.x * N.y * N.z, 0.0);
+    std::vector<double> u_z(N.x * N.y * N.z, 0.0);
+    unsigned int idx = 0;
+
+    for (unsigned int x = 0; x < N.x; ++x)
+    {
+        for (unsigned int y = 0; y < N.y; ++y)
+        {
+            for (unsigned int z = 0; z < N.z; ++z)
+            {
+                unsigned int u_index = index_u(x, y, z);
+
+                u_x[idx] = this->u[u_index];
+                if (v->getD() > 1)
+                {
+                    u_y[idx] = this->u[u_index + 1];
+                }
+                if (v->getD() == 3)
+                {
+                    u_z[idx] = this->u[u_index + 2];
+                }
+                idx++;
+            }
+        }
+    }
+
+    // Save u_x to a binary file
+    std::ofstream file_u_x("./bin_results/u_x_" + std::to_string(step) + ".bin", std::ios::binary);
+    file_u_x.write(reinterpret_cast<char*>(u_x.data()), u_x.size() * sizeof(double));
+    file_u_x.close();
+
+    // Save u_y to a binary file if applicable
+    if (v->getD() > 1)
+    {
+        std::ofstream file_u_y("./bin_results/u_y_" + std::to_string(step) + ".bin", std::ios::binary);
+        file_u_y.write(reinterpret_cast<char*>(u_y.data()), u_y.size() * sizeof(double));
+        file_u_y.close();
+    }
+
+    // Save u_z to a binary file if applicable
+    if (v->getD() == 3)
+    {
+        std::ofstream file_u_z("./bin_results/u_z_" + std::to_string(step) + ".bin", std::ios::binary);
+        file_u_z.write(reinterpret_cast<char*>(u_z.data()), u_z.size() * sizeof(double));
+        file_u_z.close();
+    }
 }
