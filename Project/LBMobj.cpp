@@ -3,6 +3,7 @@
 #include <filesystem> 
 #include <iomanip>
 #include <fstream>
+#include <csignal>
 
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
@@ -27,7 +28,7 @@ void LBM::init_equilibrium()
                 ArrayXd c3u = this->v->get_c() * (u * 3.0);
                 VectorXd f = (rho * this->v->get_w()).array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
 
-                savePopulation(x,y,z, f);
+                savePopulationInit(x,y,z, f);
             }
         }
     }
@@ -67,7 +68,6 @@ void LBM::stream_collide_save()
                 //collision
                 double unorm = u.norm();
                 double omusq = 1.0 - 1.5*(unorm * unorm);
-                u *= 3.0;
                 ArrayXd c3u = this->v->get_c() * (u * 3.0);
                 VectorXd twr = this->v->get_w() * tauinv * rho;
 
@@ -138,11 +138,11 @@ void LBM::saveToBin(unsigned int step)
     std::vector<double> u_z(N.x * N.y * N.z, 0.0);
     unsigned int idx = 0;
 
-    for (unsigned int x = 0; x < N.x; ++x)
+    for (unsigned int z = 0; z < N.z; ++z)
     {
         for (unsigned int y = 0; y < N.y; ++y)
         {
-            for (unsigned int z = 0; z < N.z; ++z)
+            for (unsigned int x = 0; x < N.x; ++x)
             {
                 unsigned int u_index = index_u(x, y, z);
 
@@ -181,3 +181,4 @@ void LBM::saveToBin(unsigned int step)
         file_u_z.close();
     }
 }
+

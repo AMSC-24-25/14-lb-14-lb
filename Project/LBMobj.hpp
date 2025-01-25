@@ -15,6 +15,7 @@
 #include <vector>
 #include <exception>
 #include <eigen3/Eigen/Dense>
+#include <iostream>
 
 #ifndef __LBM_H
 #define __LBM_H
@@ -140,25 +141,33 @@ Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int 
     //const Eigen::MatrixXd& c = v->get_c();
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (~step & 1) + i];
+        p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (step & 1) * v->getQ() + i];
     } 
     return p;
 }
 
 
-Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned int z)
+Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned int z) //PLEASE CHECK THIS FUNCTION
 {
     Eigen::VectorXd adj( v->getQ() );
     const Eigen::MatrixXd& c = v->get_c();
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        unsigned int x_adj = x + c(i, 0);
-        unsigned int y_adj = y + (v->getD() > 1)? c(i, 1) : 0;
-        unsigned int z_adj = z + (v->getD() == 3)? c(i, 2) : 0;
-        if(x_adj >= 0 && x_adj < N.x && y_adj >= 0 && y_adj < N.y && z_adj >= 0 && z_adj < N.z){
-            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (~step & 1) + i];
+        unsigned int x_adj = x - c(i, 0);
+        unsigned int y_adj = y - ((v->getD() > 1) ? c(i, 1) : 0);
+        unsigned int z_adj = z - ((v->getD() == 3) ? c(i, 2) : 0);
+        if (x_adj >= 0 && x_adj < N.x &&
+            y_adj >= 0 && y_adj < N.y &&
+            z_adj >= 0 && z_adj < N.z)
+        {
+            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (step & 1) * v->getQ() + i];
+        }
+        else
+        {
+            adj(i) = 0.0;
         }
     }  
+
     return adj;
 }
 
@@ -166,7 +175,16 @@ void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const E
 {
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) + i] = population(i);
+        this->population[index_f(x,y,z) + N.x*N.y*N.z * (~step & 1) * v->getQ() + i] = population(i);
+    }     
+}
+
+//ON THE ZERO STEP, THE POPULATION IS SAVED TO THE SECOND HALF OF THE ARRAY 
+void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
+{
+    for(unsigned int i = 0; i < v->getQ(); ++i)
+    {
+        this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
     }     
 }
 

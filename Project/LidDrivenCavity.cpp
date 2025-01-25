@@ -20,14 +20,15 @@ void LidDrivenCavityInitial(unsigned int x, unsigned int y, unsigned int z, LBM&
     l.set_u(x,y,z, u);
 }
 
+//CHANGED ALL BOUNCEBACK FUNCTIONS TO REFLECT ONLY THE NORMAL COMPONENT TO THE BOUNDARY
 void BounceBackEast(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
     if(x == (l.N.x - 1))
     {
         VectorXd p = l.getPopulation(x,y,z);
         f(3) = p(1);
-        f(7) = p(5);
-        f(6) = p(8);
+        f(7) = p(8);
+        f(6) = p(5);
     }
 }
 
@@ -37,8 +38,8 @@ void BounceBackWest(unsigned int x, unsigned int y, unsigned int z, Eigen::Vecto
     {
         VectorXd p = l.getPopulation(x,y,z);
         f(1) = p(3);
-        f(5) = p(7);
-        f(8) = p(6);
+        f(5) = p(6);
+        f(8) = p(7);
     }
 }
 
@@ -48,8 +49,8 @@ void BounceBackSouth(unsigned int x, unsigned int y, unsigned int z, Eigen::Vect
     {
         VectorXd p = l.getPopulation(x,y,z);
         f(2) = p(4);
-        f(5) = p(7);
-        f(6) = p(8);
+        f(5) = p(8);
+        f(6) = p(7);
     }
 }
 

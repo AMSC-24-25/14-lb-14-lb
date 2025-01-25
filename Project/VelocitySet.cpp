@@ -8,6 +8,12 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
     c = MatrixXd(Q, D);
     w = VectorXd(Q);
 
+    /*
+    6 2 5
+    3 0 1
+    7 4 8
+    */
+
     if( Q == 9)
     {
         c << 0.0, 0.0,
