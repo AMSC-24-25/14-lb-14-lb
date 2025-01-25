@@ -18,8 +18,8 @@ COPY *.hpp .
 COPY compile.sh .
 
 
-RUN g++ -Wall -fopenmp LBMobj.hpp LBMobj.cpp VelocitySet.cpp LidDrivenCavity.hpp LidDrivenCavity.cpp  main.cpp -o ldc_sim >> compile_logs.txt
-RUN ls /app/bin_results
+RUN ./compile.sh
+
 
 # Expose the port on which the API will listen
 EXPOSE 8080
