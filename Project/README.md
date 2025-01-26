@@ -27,10 +27,17 @@ Numerical Method for Complex Boundary and Moving Boundary Flows." (Inamuro, T., 
 - singularity-ce
 
 ## Compilation and Execution
-1. full pipeline (build mpi executable - build singularity container - run ) included bash file:
+full pipeline (build mpi executable - build singularity container - run ) included bash file:
    ```bash
-   bash mpi_test.sh
+   bash singularity_full_pipeline.sh
    ```
+or fast build and execution:
+   ```bash
+   bash mpi_fast_test.sh
+   ```
+
+
+
 
 ## How to Use
 1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g., grid size, time steps).
