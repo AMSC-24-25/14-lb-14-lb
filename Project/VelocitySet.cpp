@@ -109,7 +109,8 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
                 1.0, 1.0, -1.0,
                 -1.0, 1.0, -1.0,
                 -1.0, -1.0, -1.0,
-                1.0, -1.0, -1.0;
+                1.0, -1.0, -1.0,
+                0.0, 0.0, -1.0;
 
         constexpr double w0 = 8.0/27.0;  // zero weight
         constexpr double ws = 2.0/27.0;  // adjacent weight
