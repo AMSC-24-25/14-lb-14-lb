@@ -37,12 +37,21 @@ void LBM::init_equilibrium()
     std::cout << "Initialization completed." << std::endl;
 }
 
+void LBM::init_obstacle() {
+    this -> obstacle.x = 3.0/7.0 * (this -> N.x);
+    this -> obstacle.y = 5.5/7.0 * (this -> N.y);
+    this -> obstacle.z = 3.0/7.0 * (this -> N.z);
+    this -> obstacle.length = 1.0/7.0 * (this -> N.x);
+    this -> obstacle.height = 1.0/7.0 * (this -> N.y);
+    this -> obstacle.depth = 1.0/7.0 * (this -> N.z);
+}
+
 void LBM::stream_collide_save()
 {
-    std::cout << "Simulating step " << this->step << "...  ";
-    // useful constants
-    const double tauinv = 2.0 / (6.0 * this->nu + 1.0); // 1/tau
-    const double omtauinv = 1.0 - tauinv;               // 1 - 1/tau
+    //std::cout << "Simulating step " << this->step << "...  ";
+        // useful constants
+    const double tauinv = 2.0/(6.0*this->nu+1.0); // 1/tau
+    const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
 
     // sync with other nodes
 #pragma omp parallel master
@@ -108,7 +117,7 @@ void LBM::stream_collide_save()
     }
 
     this->step++;
-    std::cout << " Completed." << std::endl;
+    //std::cout << " Completed." << std::endl;
 }
 
 LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::partition_config par_conf, LBM::dimensions d, double nu) : N(d), nu(nu)

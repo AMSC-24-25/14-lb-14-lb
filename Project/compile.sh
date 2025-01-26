@@ -9,4 +9,4 @@ CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp -I /usr/include -fopenmp -O3"
 # g++ LBM.o seconds.o main.o -o sim
 
 #classes at the moment
-g++ ${CXXFLAGS} LBMobj.hpp LBMobj.cpp VelocitySet.cpp LidDrivenCavity.hpp LidDrivenCavity.cpp  main.cpp -o ldc_sim
+g++ ${CXXFLAGS} LBMobj.hpp LBMobj.cpp VelocitySet.cpp LidDrivenCavity.hpp LidDrivenCavity.cpp ObstacleLiftDrag.hpp ObstacleLiftDrag.cpp main.cpp -o ldc_sim

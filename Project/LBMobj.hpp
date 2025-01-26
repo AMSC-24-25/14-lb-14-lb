@@ -23,35 +23,28 @@
 class LBM
 {
 public:
-    class VelocitySet
-    {
-    public:
-        enum StandardSet
+        class VelocitySet
         {
-            D1Q3,
-            D2Q9,
-            D3Q15,
-            D3Q19,
-            D3Q27
+            public: 
+                enum StandardSet { D1Q3, D2Q9, D3Q15, D3Q19, D3Q27 };
+            
+            protected: 
+                const unsigned int D;
+                const unsigned int Q;
+                Eigen::MatrixXd c;
+                Eigen::VectorXd w;
+
+            public:
+                VelocitySet(StandardSet set);
+                const unsigned int getD();
+                const unsigned int getQ();
+                const Eigen::MatrixXd& get_c();
+                const Eigen::VectorXd& get_w();
+
+            private:
+                static const unsigned int fromStdD(StandardSet std);
+                static const unsigned int fromStdQ(StandardSet std);
         };
-
-    protected:
-        const unsigned int D;
-        const unsigned int Q;
-        Eigen::MatrixXd c;
-        Eigen::VectorXd w;
-
-    public:
-        VelocitySet(StandardSet set);
-        const unsigned int getD();
-        const unsigned int getQ();
-        const Eigen::MatrixXd &get_c();
-        const Eigen::VectorXd &get_w();
-
-    private:
-        static const unsigned int fromStdD(StandardSet std);
-        static const unsigned int fromStdQ(StandardSet std);
-    };
 
     std::function<void(unsigned int, unsigned int, unsigned int, LBM &)> InitialCondition;
     std::vector<std::function<void(unsigned int, unsigned int, unsigned int, Eigen::VectorXd &, LBM &)>> BoundaryConditions;
@@ -67,7 +60,15 @@ public:
         int rank;
         int world;
     };
-
+    struct Obstacle
+    {
+        unsigned int x;
+        unsigned int y;
+        unsigned int z;
+        unsigned int length;
+        unsigned int height;
+        unsigned int depth;
+    } obstacle;
     struct x_location
     {
         long start;
@@ -98,8 +99,8 @@ private:
 
 public:
     void init_equilibrium();
+    void init_obstacle();
     void stream_collide_save();
-
     unsigned int NewFunction();
 
     LBM(LBM::VelocitySet::StandardSet vSet, LBM::partition_config par_conf, LBM::dimensions d, double nu);

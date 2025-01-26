@@ -1,6 +1,7 @@
 #include "seconds.h"
 #include "LBMobj.hpp"
 #include "LidDrivenCavity.hpp"
+#include "ObstacleLiftDrag.hpp"
 #include <iostream>
 #include <mpi.h>
 
@@ -49,8 +50,17 @@ int main(int argc, char *argv[])
     std::cout << "Set South Boundary for bounce back." << std::endl;
     lbm.addBoundaryCondition(MovingWallNorth);
     std::cout << "Set North Boundary as moving wall." << std::endl;
+    lbm.addBoundaryCondition(ObstacleEast);
+    std::cout << "Set East Boundary for obstacle." << std::endl;
+    lbm.addBoundaryCondition(ObstacleWest);
+    std::cout << "Set West Boundary for obstacle." << std::endl;
+    lbm.addBoundaryCondition(ObstacleSouth);
+    std::cout << "Set South Boundary for obstacle." << std::endl;
+    lbm.addBoundaryCondition(ObstacleNorth);
+    std::cout << "Set North Boundary for obstacle." << std::endl;
 
-    // double start = seconds();
+    lbm.init_equilibrium();
+    lbm.init_obstacle();
 
     lbm.init_equilibrium();
     // main simulation loop; take NSTEPS time steps
