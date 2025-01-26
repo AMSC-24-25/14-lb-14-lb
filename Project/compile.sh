@@ -2,7 +2,7 @@
 
 rm -f ldc_sim
 
-CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp -I/usr/include/ -fopenmp -O3"
+CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp -I ${mkEigenInc} -fopenmp -O3"
 
 
 # for mac:
