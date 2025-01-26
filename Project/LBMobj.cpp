@@ -48,24 +48,25 @@ void LBM::stream_collide_save()
 #pragma omp parallel master
     if (step != 0) // v->getD()
     {
+        int a1, a2;
         
         int overlap_size = N.y * N.z * v->getD();
         if (x_loc.left_pad)
         {
-#pragma omp task
+#pragma omp task depend(out:a1)
             MPI_Send(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD);
 
-#pragma omp task
+#pragma omp task depend(in:a1)
             MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
         if (x_loc.right_pad)
         {
             double *right_u = u.get() + overlap_size * (x_len_no_pad - 1 - x_loc.left_pad); // last slice of computed u
-#pragma omp task
+#pragma omp task depend(out:a2)
             MPI_Send(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD);
 
-#pragma omp task
+#pragma omp task depend(in:a2)
             MPI_Recv(right_u + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
