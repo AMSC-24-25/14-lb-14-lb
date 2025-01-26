@@ -9,7 +9,7 @@ const int NX = 64 * scale;
 const int NY = NX;
 const double nu = 1.0 / 6.0;
 const int NSTEPS = 7; // Added + 1 just to test the code
-const int NSAVE = 5;
+const int NSAVE = 50;
 const int NMSG = 50 * scale * scale;
 
 int world_size;
@@ -52,27 +52,16 @@ int main(int argc, char *argv[])
 
     // double start = seconds();
 
-#pragma omp parallel master
+    lbm.init_equilibrium();
+    // main simulation loop; take NSTEPS time steps
+    for (int n = 0; n < NSTEPS; ++n)
     {
-        lbm.init_equilibrium();
-        // main simulation loop; take NSTEPS time steps
-
-        int arr[10];
-        int partner_rank = (world_rank + 1) % 2;
-
-        for (int n = 0; n < NSTEPS; ++n)
+        lbm.stream_collide_save();
+        if (n % NSAVE == 0)
         {
-            lbm.stream_collide_save();
-            if (n % NSAVE == 0)
-            {
-                lbm.saveToBin(n, world_rank);
-                printf("saved to bin \n**********\n");
-            }
+            lbm.saveToBin(n, world_rank);
         }
     }
 
-    // double end = seconds();
-    // double runtime = end-start;
-    printf("finishing hehe");
     MPI_Finalize();
 }

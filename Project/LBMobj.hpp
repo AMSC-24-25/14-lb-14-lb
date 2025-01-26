@@ -160,7 +160,7 @@ Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int 
     // const Eigen::MatrixXd& c = v->get_c();
     for (unsigned int i = 0; i < v->getQ(); ++i)
     {
-        p(i) = this->population[index_f(x, y, z) + N.x * N.y * N.z * (step & 1) * v->getQ() + i];
+        p(i) = this->population[index_f(x, y, z) + x_len * N.y * N.z * (step & 1) * v->getQ() + i];
     }
     return p;
 }
@@ -178,7 +178,7 @@ Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned
             y_adj >= 0 && y_adj < N.y &&
             z_adj >= 0 && z_adj < N.z)
         {
-            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x * N.y * N.z * (step & 1) * v->getQ() + i];
+            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + x_len * N.y * N.z * (step & 1) * v->getQ() + i];
         }
         else
         {
@@ -193,7 +193,7 @@ void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const E
 {
     for (unsigned int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x, y, z) + N.x * N.y * N.z * (~step & 1) * v->getQ() + i] = population(i);
+        this->population[index_f(x, y, z) + x_len * N.y * N.z * (~step & 1) * v->getQ() + i] = population(i);
     }
 }
 
@@ -202,15 +202,14 @@ void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, con
 {
     for (unsigned int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x, y, z) + N.x * N.y * N.z * (step & 1) * v->getQ() + i] = population(i);
+        this->population[index_f(x, y, z) + x_len * N.y * N.z * (step & 1) * v->getQ() + i] = population(i);
     }
 }
 
 unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z)
 {
     check_coordinates(x, y, z);
-    x -= x_loc.start;
-    x += x_loc.left_pad; // shortcut to add one if padded left.
+    x = x - x_loc.start + x_loc.left_pad;
     return (N.y * x + y) * N.z + z;
 }
 

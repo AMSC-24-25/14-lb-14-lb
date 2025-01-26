@@ -45,37 +45,27 @@ void LBM::stream_collide_save()
     const double omtauinv = 1.0 - tauinv;               // 1 - 1/tau
 
     // sync with other nodes
-
+#pragma omp parallel master
     if (step != 0) // v->getD()
     {
+        
         int overlap_size = N.y * N.z * v->getD();
         if (x_loc.left_pad)
         {
 #pragma omp task
-            {
-                printf("send to left \n**********\n");
-                MPI_Send(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD);
-            }
+            MPI_Send(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD);
+
 #pragma omp task
-            {
-                printf("get from left \n**********\n");
-                MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            }
+            MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
         if (x_loc.right_pad)
         {
             double *right_u = u.get() + overlap_size * (x_len_no_pad - 1 - x_loc.left_pad); // last slice of computed u
 #pragma omp task
-            {
-                printf("get from right \n**********\n");
-                MPI_Send(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD);
-            }
+            MPI_Send(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD);
 
 #pragma omp task
-            {
-                printf("get from right \n**********\n");
-            }
             MPI_Recv(right_u + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
@@ -175,7 +165,7 @@ void LBM::addBoundaryCondition(std::function<void(unsigned int, unsigned int, un
 
 void LBM::saveToBin(unsigned int step, int world_rank)
 {
-    const std::string result_base_dir = "./bin_results/partition_" + std::to_string(world_rank) + "/";
+    const std::string result_base_dir = "./bin_results/partition_" + std::to_string(x_loc.start) + "-" + std::to_string(x_loc.end) + "/";
     std::filesystem::create_directories(result_base_dir);
     // Allocate arrays for the local domain
     std::vector<double> u_x(x_len_no_pad * N.y * N.z, 0.0);
