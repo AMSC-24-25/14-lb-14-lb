@@ -31,6 +31,91 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
         constexpr double wd = 1.0/36.0;
         w << w0, ws, ws, ws, ws, wd, wd, wd, wd;
     }
+
+    if(Q == 15){
+        c << 0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0,
+                0.0, -1.0, 0.0,
+                1.0, 1.0, 0.0,
+                -1.0, 1.0, 0.0,
+                -1.0, -1.0, 0.0,
+                1.0, -1.0, 0.0,
+                0.0, 0.0, 1.0,
+                1.0, 0.0, 1.0,
+                0.0, 1.0, 1.0,
+                -1.0, 0.0, 1.0,
+                0.0, -1.0, 1.0;
+
+        constexpr double w0 = 2.0/9.0;  // zero weight
+        constexpr double ws = 1.0/9.0;  // adjacent weight
+        constexpr double wd = 1.0/72.0;
+        w << w0, ws, ws, ws, ws, ws, ws, ws, ws, wd, wd, wd, wd, wd, wd;
+    }
+
+    if( Q == 19)
+    {
+        c << 0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0,
+                0.0, -1.0, 0.0,
+                1.0, 1.0, 0.0,
+                -1.0, 1.0, 0.0,
+                -1.0, -1.0, 0.0,
+                1.0, -1.0, 0.0,
+                0.0, 0.0, 1.0,
+                1.0, 0.0, 1.0,
+                0.0, 1.0, 1.0,
+                -1.0, 0.0, 1.0,
+                0.0, -1.0, 1.0,
+                1.0, 1.0, 1.0,
+                -1.0, 1.0, 1.0,
+                -1.0, -1.0, 1.0,
+                1.0, -1.0, 1.0;
+             
+
+        constexpr double w0 = 1.0/3.0;  // zero weight
+        constexpr double ws = 1.0/18.0;  // adjacent weight
+        constexpr double wd = 1.0/36.0;
+        w << w0, ws, ws, ws, ws, ws, ws, ws, ws, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd;
+    }
+
+    if(Q == 27)
+    {
+        c << 0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0,
+                0.0, -1.0, 0.0,
+                1.0, 1.0, 0.0,
+                -1.0, 1.0, 0.0,
+                -1.0, -1.0, 0.0,
+                1.0, -1.0, 0.0,
+                0.0, 0.0, 1.0,
+                1.0, 0.0, 1.0,
+                0.0, 1.0, 1.0,
+                -1.0, 0.0, 1.0,
+                0.0, -1.0, 1.0,
+                1.0, 1.0, 1.0,
+                -1.0, 1.0, 1.0,
+                -1.0, -1.0, 1.0,
+                1.0, -1.0, 1.0,
+                1.0, 0.0, -1.0,
+                0.0, 1.0, -1.0,
+                -1.0, 0.0, -1.0,
+                0.0, -1.0, -1.0,
+                1.0, 1.0, -1.0,
+                -1.0, 1.0, -1.0,
+                -1.0, -1.0, -1.0,
+                1.0, -1.0, -1.0;
+
+        constexpr double w0 = 8.0/27.0;  // zero weight
+        constexpr double ws = 2.0/27.0;  // adjacent weight
+        constexpr double wd = 1.0/54.0;
+        w << w0, ws, ws, ws, ws, ws, ws, ws, ws, ws, ws, ws, ws, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd, wd;
+    }
 } 
 
 const unsigned int LBM::VelocitySet::getD() { return this->D; }
