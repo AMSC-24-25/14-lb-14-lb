@@ -97,11 +97,12 @@ class LBM
     
         inline Eigen::VectorXd populationAdjacent(unsigned int x, unsigned int y, unsigned int z);
         inline void savePopulation(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population);
+        inline void savePopulationInit(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population);
 
         void applyInitial(unsigned int x, unsigned int y, unsigned int z);
         void applyBoundary(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f);
 
-        inline unsigned int check_coordinates(unsigned int x, unsigned int y, unsigned int z);
+        inline void check_coordinates(unsigned int x, unsigned int y, unsigned int z);
         inline unsigned int index_r(unsigned int x, unsigned int y, unsigned int z);
         inline unsigned int index_u(unsigned int x, unsigned int y, unsigned int z);
         inline unsigned int index_f(unsigned int x, unsigned int y, unsigned int z);
@@ -203,7 +204,7 @@ unsigned int LBM::index_f(unsigned int x, unsigned int y, unsigned int z) {
     return index_r(x,y,z) * v->getQ(); 
 }
 
-unsigned int LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int z)
+void LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int z)
 {
     if(x >= N.x || x < 0)
     {
