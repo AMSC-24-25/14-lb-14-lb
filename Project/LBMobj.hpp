@@ -53,19 +53,34 @@ class LBM
             unsigned int y;
             unsigned int z;
         } const N;
-        
+
+        struct partition_config {
+            int rank;
+            int world;
+        };
+
+        struct x_location{
+            long start;
+            long end;
+            bool left_pad;
+            bool right_pad;
+        };
+
         const double nu;
         const double tau = 3.0*nu+0.5;
         const double cs = 1.0/1.732;
     
     private:
         std::unique_ptr<VelocitySet> v;
-        
-        
+        LBM::dimensions dims;
+        LBM::x_location x_loc;
 
         bool computeFlowProperties;
         bool quiet = false;
         unsigned int step = 0;
+        int node_id;
+        int x_len_no_pad;
+        int x_len;
 
         std::unique_ptr<double[]> population;
         std::unique_ptr<double[]> rho;
@@ -75,7 +90,9 @@ class LBM
         void init_equilibrium();
         void stream_collide_save();
 
-        LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+        unsigned int NewFunction();
+
+        LBM(LBM::VelocitySet::StandardSet vSet, LBM::partition_config par_conf, LBM::dimensions d,  double nu);
 
         void setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition);
         void addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>);
@@ -89,7 +106,7 @@ class LBM
         inline void setVerbose();
         inline void setQuiet();
         
-        void saveToBin(unsigned int step);
+        void saveToBin(unsigned int step, int world_rank);
 
 
     
@@ -186,12 +203,14 @@ void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, con
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
         this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
-    }     
+    }
 }
 
 unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { 
     check_coordinates(x,y,z);
-    return (N.y * z + y) * N.x + x; 
+    x -= x_loc.start;
+    x += x_loc.left_pad; //shortcut to add one if padded left.
+    return (N.y * x + y) * N.z + z;
 }
 
 unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { 
@@ -208,14 +227,17 @@ void LBM::check_coordinates(unsigned int x, unsigned int y, unsigned int z)
 {
     if(x >= N.x || x < 0)
     {
+        printf("Invalid x coordinate\n");
         throw std::out_of_range(std::string{"Invalid x coordinate\n"});
     }
     if(y < 0 || y >= N.y)
     {
+        printf("Invalid y coordinate\n");
         throw std::out_of_range(std::string{"Invalid y coordinate\n"});
     }
     if(z < 0 || z >= N.z)
     {
+        printf("Invalid z coordinate\n");
         throw std::out_of_range(std::string{"Invalid z coordinate\n"});
     }
 }

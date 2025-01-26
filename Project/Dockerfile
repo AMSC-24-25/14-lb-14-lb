@@ -5,7 +5,7 @@ FROM fedora:latest
 WORKDIR /app
 
 # Install necessary dependencies
-RUN dnf5 install @development-tools cmake g++ eigen3-devel cat -y 
+RUN dnf5 install @development-tools cmake g++ eigen3-devel cat openmpi-devel -y 
 
 RUN mkdir bin_results
 
@@ -16,7 +16,6 @@ COPY bin*.py .
 COPY *.hpp .
 
 COPY compile.sh .
-
 
 RUN ./compile.sh
 
