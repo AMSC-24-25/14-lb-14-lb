@@ -80,45 +80,44 @@ void LBM::stream_collide_save()
         }
     }
 
-
 #pragma omp parallel for default(none) shared(tauinv, omtauinv) schedule(static)
-for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
-{
-    for (unsigned int y = 0; y < this->N.y; ++y)
+    for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
     {
-        for (unsigned int z = 0; z < this->N.z; ++z)
+        for (unsigned int y = 0; y < this->N.y; ++y)
         {
-            // classical stream
-            VectorXd stream = populationAdjacent(x, y, z);
-            // modify stream applying boundaries
-            applyBoundary(x, y, z, stream);
+            for (unsigned int z = 0; z < this->N.z; ++z)
+            {
+                // classical stream
+                VectorXd stream = populationAdjacent(x, y, z);
+                // modify stream applying boundaries
+                applyBoundary(x, y, z, stream);
 
-            // compute moments
-            double rho = stream.sum();
-            set_rho(x, y, z, rho);
+                // compute moments
+                double rho = stream.sum();
+                set_rho(x, y, z, rho);
 
-            double rhoinv = 1.0 / rho;
+                double rhoinv = 1.0 / rho;
 
-            VectorXd cf_rhoinv = (this->v->get_c().transpose() * stream) * rhoinv;
-            VectorXd &u = cf_rhoinv;
-            set_u(x, y, z, u);
+                VectorXd cf_rhoinv = (this->v->get_c().transpose() * stream) * rhoinv;
+                VectorXd &u = cf_rhoinv;
+                set_u(x, y, z, u);
 
-            // collision
-            double unorm = u.norm();
-            double omusq = 1.0 - 1.5 * (unorm * unorm);
-            ArrayXd c3u = this->v->get_c() * (u * 3.0);
-            VectorXd twr = this->v->get_w() * tauinv * rho;
+                // collision
+                double unorm = u.norm();
+                double omusq = 1.0 - 1.5 * (unorm * unorm);
+                ArrayXd c3u = this->v->get_c() * (u * 3.0);
+                VectorXd twr = this->v->get_w() * tauinv * rho;
 
-            stream *= omtauinv;
-            stream += (twr.array() * (omusq + c3u * (1.0 + 0.5 * c3u))).matrix();
+                stream *= omtauinv;
+                stream += (twr.array() * (omusq + c3u * (1.0 + 0.5 * c3u))).matrix();
 
-            this->savePopulation(x, y, z, stream);
+                this->savePopulation(x, y, z, stream);
+            }
         }
     }
-}
 
-this->step++;
-std::cout << " Completed." << std::endl;
+    this->step++;
+    std::cout << " Completed." << std::endl;
 }
 
 LBM::LBM(LBM::VelocitySet::StandardSet vSet, LBM::partition_config par_conf, LBM::dimensions d, double nu) : N(d), nu(nu)

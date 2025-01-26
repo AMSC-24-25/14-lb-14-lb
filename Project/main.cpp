@@ -73,6 +73,6 @@ int main(int argc, char *argv[])
 
     // double end = seconds();
     // double runtime = end-start;
-    printf("finishing hehe" );
+    printf("finishing hehe");
     MPI_Finalize();
 }
