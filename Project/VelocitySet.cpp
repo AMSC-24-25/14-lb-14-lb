@@ -122,7 +122,7 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
     {
         for(unsigned int j = 0; j < Q; ++j)
         {
-            if(c(i) == -c(j))
+            if(c.row(i) == -c.row(j))
             {
                 inverse[i] = j;
             }
