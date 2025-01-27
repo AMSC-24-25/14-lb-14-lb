@@ -101,7 +101,7 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
             -1.0, 0.0, 1.0,
             0.0, 1.0, -1.0,
             0.0, -1.0, 1.0,
-             1.0, 1.0, 1.0
+             1.0, 1.0, 1.0,
           -1.0, -1.0, -1.0,
             1.0, 1.0, -1.0,
            -1.0, -1.0, 1.0,
