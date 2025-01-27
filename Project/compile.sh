@@ -2,7 +2,8 @@
 
 rm -f ldc_sim
 
-CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp -I /usr/include/ -fopenmp -O3"
+
+CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp -I  /u/sw/toolchains/gcc-glibc/11.2.0/pkgs/eigen/3.3.9/include/eigen3 -I /usr/include/ -I /usr/include/x86_64-linux-gnu"
 
 
 # for mac:

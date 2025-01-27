@@ -1,57 +1,62 @@
 import numpy as np
 import os
 
-def load_field(filename, nx, ny):
-    """Load binary field file."""
-    if os.path.exists(filename):
-        data = np.fromfile(filename, dtype=np.float64)
-        if data.size == nx * ny:
-            print(f"Loaded {filename}: min={data.min()}, max={data.max()}")
-            return data.reshape((ny, nx))
-        else:
-            print(f"Error: File {filename} has incorrect size {data.size}, expected {nx * ny}")
-    else:
-        print(f"File {filename} not found.")
-    return np.zeros((ny, nx))
+# Funzione per leggere un file binario
+def read_binary_file(filename, shape):
+    """Legge un file binario e lo converte in un array numpy."""
+    data = np.fromfile(filename, dtype=np.float64)
+    return data.reshape(shape)
 
-def save_to_vtk(filename, data, field_name, nx, ny):
-    """Save a 2D field to a VTK file."""
-    with open(filename, 'w') as f:
-        f.write("# vtk DataFile Version 3.0\n")
-        f.write(f"{field_name} field\n")
-        f.write("ASCII\n")
-        f.write("DATASET STRUCTURED_POINTS\n")
-        f.write(f"DIMENSIONS {nx} {ny} 1\n")
-        f.write("ORIGIN 0 0 0\n")
-        f.write("SPACING 1 1 1\n")
-        f.write(f"POINT_DATA {nx * ny}\n")
-        f.write(f"SCALARS {field_name} double 1\n")
-        f.write("LOOKUP_TABLE default\n")
-        for j in range(ny):
-            for i in range(nx):
-                f.write(f"{data[j, i]}\n")
-        print(f"Saved {filename}")
+# Funzione per scrivere i file VTK
 
-def convert_bin_to_vtk(bin_dir, vtk_dir, field_names, nx, ny):
-    """Convert binary field files to VTK files."""
-    os.makedirs(vtk_dir, exist_ok=True)
-    for field in field_names:
-        for timestep in sorted(os.listdir(bin_dir)):
-            if timestep.startswith(field) and timestep.endswith('.bin'):
-                bin_file = os.path.join(bin_dir, timestep)
-                vtk_file = os.path.join(vtk_dir, timestep.replace('.bin', '.vtk'))
-                data = load_field(bin_file, nx, ny)
-                save_to_vtk(vtk_file, data, field, nx, ny)
+def write_vtk(output_file, velocity_magnitude, nx, ny, nz):
+    """Scrive i dati del modulo della velocità in formato VTK per Paraview."""
+    with open(output_file, 'w') as vtk_file:
+        # Header VTK
+        vtk_file.write("# vtk DataFile Version 3.0\n")
+        vtk_file.write("Velocity magnitude field\n")
+        vtk_file.write("ASCII\n")
+        vtk_file.write("DATASET STRUCTURED_POINTS\n")
+        vtk_file.write(f"DIMENSIONS {nx} {ny} {nz}\n")
+        vtk_file.write("ORIGIN 0 0 0\n")
+        vtk_file.write("SPACING 1 1 1\n")
+        vtk_file.write(f"POINT_DATA {nx * ny * nz}\n")
 
-# Example usage
-if __name__ == "__main__":
-    BIN_DIR = "../bin_results"
-    VTK_DIR = "../vtk_results"
-    FIELD_NAMES = ["rho", "ux", "uy"]
-    import pandas as pd
+        # Scrivi il modulo della velocità
+        vtk_file.write("SCALARS velocity_magnitude float\n")
+        vtk_file.write("LOOKUP_TABLE default\n")
+        for z in range(nz):
+            for y in range(ny):
+                for x in range(nx):
+                    vtk_file.write(f"{velocity_magnitude[z, y, x]}\n")
 
-# Load simulation parameters
-params = pd.read_csv('simulation_parameters.csv')
-NX, NY = params.iloc[0][['NX', 'NY']].astype(int).values  # Example dimensions
+# Funzione principale
+def convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps):
+    """Converte i file binari in file VTK per Paraview."""
+    for step in steps:
+        # File binari per ogni componente della velocità
+        ux_file = os.path.join(input_folder, f"u_x_{step}.bin")
+        uy_file = os.path.join(input_folder, f"u_y_{step}.bin")
+        uz_file = os.path.join(input_folder, f"u_z_{step}.bin")
 
-convert_bin_to_vtk(BIN_DIR, VTK_DIR, FIELD_NAMES, NX, NY)
+        # Leggi i file binari
+        u_x = read_binary_file(ux_file, (nz, ny, nx))
+        u_y = read_binary_file(uy_file, (nz, ny, nx))
+        u_z = read_binary_file(uz_file, (nz, ny, nx))
+
+        # Calcola il modulo della velocità
+        velocity_magnitude = np.sqrt(u_x**2 + u_y**2 + u_z**2)
+
+        # Scrivi il file VTK
+        vtk_filename = os.path.join(output_folder, f"velocity_magnitude_{step}.vtk")
+        write_vtk(vtk_filename, velocity_magnitude, nx, ny, nz)
+        print(f"File VTK creato: {vtk_filename}")
+
+# Parametri del dominio e del simulatore
+input_folder = "./bin_results"  # Cartella dei risultati binari
+output_folder = "./vtk_results"  # Cartella dei risultati binari
+nx, ny, nz = 32, 32, 32  # Dimensioni del dominio
+steps = list(range(0, 2001, 40))  # Passi temporali salvati
+
+# Converte i file binari in formato VTK
+convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps)
