@@ -56,6 +56,8 @@ void BounceBackAllBut001(unsigned int x, unsigned int y, unsigned int z, Eigen::
     else if(y == l.N.y - 1) y_bounce = 1.0;
     if(z == 0) z_bounce = -1.0;
 
+    if(x_bounce == 0.0 && y_bounce == 0.0 && z_bounce == 0.0) return;
+
     const Eigen::MatrixXd& c = l.v->get_c();
     VectorXd p = l.getPopulation(x,y,z);
     for(unsigned int i = 0; i < l.v->getQ(); i++)
