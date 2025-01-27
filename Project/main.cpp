@@ -2,18 +2,20 @@
 #include "LBM.hpp"
 #include "LidDrivenCavity3D.hpp"
 #include <iostream>
+#include <omp.h>
 
 const unsigned int scale = 2;
 const unsigned int NX = 64*scale;
 const unsigned int NY = NX;
 const unsigned int NZ = NX;
 const double nu = 1.0 / 6.0;
-const unsigned int NSTEPS = 50*scale*scale + 1; //Added + 1 just to test the code
+const unsigned int NSTEPS = 500*scale*scale + 1; //Added + 1 just to test the code
 const unsigned int NSAVE  =  10*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
 
 int main(int argc, char* argv[])
 {
+    omp_set_num_threads(omp_get_max_threads());
 
     //lbm object initialization
     LBM::dimensions d = {NX, NY, NZ};
@@ -26,10 +28,9 @@ int main(int argc, char* argv[])
     std::cout << "Set any other wall for bounce-back." << std::endl; 
 
     //double start = seconds();
-    #pragma omp parallel master 
-    {
-        lbm.init_equilibrium();
-// main simulation loop; take NSTEPS time steps
+
+    lbm.init_equilibrium();
+    // main simulation loop; take NSTEPS time steps
     for(unsigned int n = 0; n < NSTEPS; ++n)
     {
 
@@ -41,7 +42,7 @@ int main(int argc, char* argv[])
         }
 
     }
-    }
+
     
     //double end = seconds();
     //double runtime = end-start;
