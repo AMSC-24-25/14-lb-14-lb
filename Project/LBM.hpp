@@ -22,6 +22,7 @@ class LBM
                 Eigen::MatrixXd c;
                 Eigen::VectorXd w;
                 std::array<int, 27> inverse;
+                std::vector<int> base; //set of velocity such that base and its inverse velocities cover all velocity directions
 
             public:
                 VelocitySet(StandardSet set);
@@ -32,6 +33,7 @@ class LBM
                 // Given the i-th direction of the velocity set, 
                 //the method returns the index of the direction opposed to it
                 const unsigned int directionIndexInvert(unsigned int i);
+                const unsigned int directionIndexBase(unsigned int i);
      
             private:
                 static const unsigned int fromStdD(StandardSet std);
@@ -57,7 +59,10 @@ class LBM
         
         const double nu;
         const double tau = 3.0*nu+0.5;
-        const double cs = 1.0/1.732;
+        const double cs = 1.0 / 1.73205080756887729352;
+        const double omgSym = 1/(nu/(cs*cs)+0.5);
+        const double lambda = 0.25; //Provides the most stable simulations according to the book
+        const double omgAnti = 1/(lambda*cs*cs/nu + 0.5);
         std::unique_ptr<VelocitySet> v;
     
     private:

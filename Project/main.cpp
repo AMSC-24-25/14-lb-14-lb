@@ -11,7 +11,7 @@ const unsigned int NX = 64*scale;
 const unsigned int NY = NX;
 const unsigned int NZ = NX;
 const double nu = 1.0 / 6.0;
-const unsigned int NSTEPS = 500*scale*scale + 1; //Added + 1 just to test the code
+const unsigned int NSTEPS = 50*scale*scale + 1; //Added + 1 just to test the code
 const unsigned int NSAVE  =  10*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
 

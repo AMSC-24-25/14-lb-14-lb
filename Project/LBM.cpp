@@ -49,10 +49,8 @@ void LBM::stream_collide_save()
 {
     std::cout << "Simulating step " << this->step << "...  ";
         // useful constants
-    const double tauinv = 2.0/(6.0*this->nu+1.0); // 1/tau
-    const double omtauinv = 1.0-tauinv;     // 1 - 1/tau
 
-    #pragma omp parallel for default(none) shared(tauinv, omtauinv) schedule(static)
+    #pragma omp parallel for default(none) schedule(static)
     for(unsigned int x = 0; x < this->N.x; ++x)
     {
         for(unsigned int y = 0; y < this->N.y; ++y)
@@ -78,10 +76,37 @@ void LBM::stream_collide_save()
                 double unorm = u.norm();
                 double omusq = 1.0 - 1.5*(unorm * unorm);
                 ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd twr = this->v->get_w() * tauinv * rho;
+                VectorXd twr = this->v->get_w() * rho;
 
-                stream *= omtauinv;
-                stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
+                int dim = v->getQ()/2+1;
+
+                VectorXd feq = (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) ));
+                VectorXd ftsym(dim);
+                VectorXd ftanti(dim);
+                VectorXd feqsym(dim);
+                VectorXd feqanti(dim);
+
+                for (int i = 0; i < dim; i++) {
+                    int idx = v->directionIndexBase(i);
+                    int inv = v->directionIndexInvert(idx);
+                    ftsym[i] = stream[idx];
+                    ftanti[i] = stream[inv];
+                    feqsym[i] = feq[idx];
+                    feqanti[i] = feq[inv];
+                }
+
+                VectorXd sym = omgSym * (ftsym + ftanti - feqsym - feqanti) / 2.0;
+                VectorXd anti = omgAnti * (ftsym - ftanti - feqsym + feqanti) / 2.0;
+
+                for (int i = 0; i < dim; i++) {
+                    int idx = v->directionIndexBase(i);
+                    int inv = v->directionIndexInvert(idx);
+                    stream[idx] -= sym[i] + anti[i];
+                    stream[inv] -= sym[i] - anti[i];
+                }
+
+                //stream *= omtauinv;
+                //stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
 
                 this->savePopulation(x,y,z, stream);
             }

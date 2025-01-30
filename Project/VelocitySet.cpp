@@ -128,6 +128,20 @@ LBM::VelocitySet::VelocitySet(StandardSet set) : D(fromStdD(set)), Q(fromStdQ(se
             }
         }
     }
+    std::vector<bool> visited(Q, false);
+
+    for(unsigned int i = 0; i < Q; ++i) {
+        if (!visited[i]) {
+            int inv = inverse[i];
+            
+            // Mark the current element and its inverse as visited
+            visited[i] = true;
+            visited[inv] = true;
+            
+            // Add to basis
+            base.push_back(i);
+        }
+    }
 } 
 
 const unsigned int LBM::VelocitySet::getD() { return this->D; }
@@ -161,4 +175,8 @@ const unsigned int LBM::VelocitySet::fromStdQ(StandardSet std)
 const unsigned int LBM::VelocitySet::directionIndexInvert(unsigned int i)
 {
     return inverse[i];
+}
+const unsigned int LBM::VelocitySet::directionIndexBase(unsigned int i)
+{
+    return base[i];
 }
