@@ -36,6 +36,15 @@ void LBM::init_equilibrium()
     std::cout << "Initialization completed." << std::endl;
 }
 
+void LBM::init_obstacle() {
+    this -> obstacle.x = 3.0/7.0 * (this -> N.x);
+    this -> obstacle.y = 5.5/7.0 * (this -> N.y);
+    this -> obstacle.z = 3.0/7.0 * (this -> N.z);
+    this -> obstacle.length = 1.0/7.0 * (this -> N.x);
+    this -> obstacle.height = 1.0/7.0 * (this -> N.y);
+    this -> obstacle.depth = 1.0/7.0 * (this -> N.z);
+}
+
 void LBM::stream_collide_save()
 {
     std::cout << "Simulating step " << this->step << "...  ";

@@ -1,6 +1,7 @@
 #include "seconds.h"
 #include "LBM.hpp"
 #include "LidDrivenCavity3D.hpp"
+#include "ObstacleLiftDrag.hpp"
 #include <iostream>
 #include <omp.h>
 #include <fstream>
@@ -27,6 +28,8 @@ int main(int argc, char* argv[])
     std::cout << "Set any other wall for bounce-back." << std::endl; 
     lbm.addBoundaryCondition(MovingWall001);
     std::cout << "Set upper (consifdering z axis) boundary as moving wall." << std::endl; 
+    lbm.addBoundaryCondition(BounceBackObstacle);
+    std::cout << "Set boundary for obstacle" << std::endl; 
 
     // Write simulation parameters to CSV file
     const double u_max = Re/(6*NX);
@@ -46,6 +49,7 @@ int main(int argc, char* argv[])
     //double start = seconds();
 
     lbm.init_equilibrium();
+    lbm.init_obstacle();
     // main simulation loop; take NSTEPS time steps
     for(unsigned int n = 0; n < NSTEPS; ++n)
     {

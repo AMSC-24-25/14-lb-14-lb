@@ -45,6 +45,15 @@ class LBM
             unsigned int y;
             unsigned int z;
         } const N;
+
+        struct Obstacle {
+            unsigned int x;
+            unsigned int y;
+            unsigned int z;
+            unsigned int length;
+            unsigned int height;
+            unsigned int depth;
+        } obstacle;
         
         const double nu;
         const double tau = 3.0*nu+0.5;
@@ -66,6 +75,7 @@ class LBM
 
     public:
         void init_equilibrium();
+        void init_obstacle();
         void stream_collide_save();
 
         LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
