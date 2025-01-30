@@ -54,7 +54,13 @@ class LBM
             unsigned int height;
             unsigned int depth;
         } obstacle;
-        
+        struct x_location
+    {
+        long start;
+        long end;
+        bool left_pad;
+        bool right_pad;
+    } x_loc; 
         const double nu;
         const double tau = 3.0*nu+0.5;
         const double cs = 1.0/1.732;
@@ -68,6 +74,9 @@ class LBM
         bool computeFlowProperties;
         bool quiet = false;
         unsigned int step = 0;
+        int node_id;
+        int x_len_no_pad;
+        int x_len;
 
         std::unique_ptr<double[]> population;
         std::unique_ptr<double[]> rho;
@@ -78,7 +87,7 @@ class LBM
         void init_obstacle();
         void stream_collide_save();
 
-        LBM(LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+        LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
 
         void setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition);
         void addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>);
@@ -141,7 +150,7 @@ Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int 
     //const Eigen::MatrixXd& c = v->get_c();
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        p(i) = this->population[index_f(x, y, z) + N.x*N.y*N.z * (step & 1) * v->getQ() + i];
+        p(i) = this->population[index_f(x, y, z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
     } 
     return p;
 }
@@ -160,7 +169,7 @@ Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned
             y_adj >= 0 && y_adj < (int)N.y &&
             z_adj >= 0 && z_adj < (int)N.z)
         {
-            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (step & 1) * v->getQ() + i];
+            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
         }
         else
         {
@@ -175,7 +184,7 @@ void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const E
 {
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x,y,z) + N.x*N.y*N.z * (~step & 1) * v->getQ() + i] = population(i);
+        this->population[index_f(x,y,z) + x_len*N.y*N.z * (~step & 1) * v->getQ() + i] = population(i);
     }     
 }
 
@@ -184,13 +193,14 @@ void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, con
 {
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        this->population[index_f(x,y,z) + N.x*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
+        this->population[index_f(x,y,z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
     }     
 }
 
 unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { 
     check_coordinates(x,y,z);
-    return (N.y * z + y) * N.x + x; 
+    x = x - x_loc.start + x_loc.left_pad;
+    return (N.y * x + y) * N.z + z;
 }
 
 unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { 

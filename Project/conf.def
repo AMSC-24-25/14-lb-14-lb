@@ -1,0 +1,16 @@
+Bootstrap: docker
+FROM: fedora
+
+%post
+    dnf5 install @development-tools cmake g++ eigen3-devel cat openmpi-devel openmpi python3 -y 
+    echo "MPI installed successfully"
+    mkdir bin_results
+
+%environment
+    export OMPI=/usr/lib64/openmpi
+    export PATH=$PATH:$OMPI/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OMPI/lib
+    export PATH=/usr/local/bin:$PATH
+
+%runscript
+    exec "$@"

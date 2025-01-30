@@ -5,6 +5,7 @@
 #include <iostream>
 #include <omp.h>
 #include <fstream>
+#include <mpi.h>
 
 const unsigned int scale = 2;
 const unsigned int NX = 64*scale;
@@ -19,9 +20,28 @@ int main(int argc, char* argv[])
 {
     omp_set_num_threads(omp_get_max_threads());
 
+    // Initialize the MPI environment
+    MPI_Init(NULL, NULL);
+
+    // Get the number of processes
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+
+    printf("Hello world from processor %s, rank %d out of %d processors\n", processor_name, world_rank, world_size);
+
+
     //lbm object initialization
     LBM::dimensions d = {NX, NY, NZ};
-    LBM lbm = LBM(LBM::VelocitySet::D3Q27, d, nu);
+    LBM lbm = LBM(world_rank, world_size, LBM::VelocitySet::D3Q27, d, nu);
     lbm.setInitialCondition(LidDrivenCavityInitial);
     std::cout << "Initial condition set for Lid Driven Cavity simulation." << std::endl;
     lbm.addBoundaryCondition(BounceBackAllBut001);
@@ -68,6 +88,6 @@ int main(int argc, char* argv[])
     //double runtime = end-start;
 
  
-    return 0;
+    MPI_Finalize();
 }
 
