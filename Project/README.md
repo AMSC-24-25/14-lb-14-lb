@@ -25,16 +25,22 @@ Numerical Method for Complex Boundary and Moving Boundary Flows." (Inamuro, T., 
 - g++ compiler with C++17 support or higher.
 - OpenMP dev package.
 
+## Requirements
+- g++ compiler with C++17 support or higher.
+- Eigen3-dev package.
+- OpenMP dev package.
+- singularity-ce
+
 ## Compilation and Execution
-1. Compile the project using the included bash file:
+full pipeline (build mpi executable - build singularity container - run ) included bash file:
    ```bash
-   ./compile.sh
+   bash singularity_full_pipeline.sh
+   ```
+or fast build and execution:
+   ```bash
+   bash mpi_fast_test.sh
    ```
 
-2. Run the executable:
-   ```bash
-   ./sim
-   ```
 
 ## How to Use
 1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g., grid size, time steps).

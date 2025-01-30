@@ -2,36 +2,68 @@
 
 using Eigen::VectorXd;
 
-void BounceBackObstacle(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
-{
-    unsigned int obx = l.obstacle.x;
-    unsigned int oby = l.obstacle.y;
-    unsigned int obz = l.obstacle.z;
-    unsigned int right = l.obstacle.x + l.obstacle.length;
-    unsigned int top = l.obstacle.y + l.obstacle.height;
-    unsigned int dep = l.obstacle.z + l.obstacle.depth;
-    double x_bounce = 0.0, y_bounce = 0.0, z_bounce = 0.0;
-    if(x == right) x_bounce = -1.0;
-    else if(x == obx) x_bounce = 1.0;
-    if(y == top) y_bounce = -1.0;
-    else if(y == oby) y_bounce = 1.0;
-    if(z == dep) z_bounce = -1.0;
-    else if (z == obz) z_bounce = 1.0;
+namespace LatticeBoltzmannMethod{
 
-    if(x_bounce == 0.0 && y_bounce == 0.0 && z_bounce == 0.0) return;
-
-    const Eigen::MatrixXd& c = l.v->get_c();
-    VectorXd p = l.getPopulation(x,y,z);
-    for(unsigned int i = 0; i < l.v->getQ(); i++)
+    ObstacleLiftDrag::ObstacleLiftDrag(unsigned int x0, unsigned int y0, unsigned int z0, unsigned int lenght, unsigned int height, unsigned int depth)
     {
-        if(c(i, 0) == x_bounce || c(i, 1) == y_bounce || c(i, 2) == z_bounce)
+        this->x = x0;
+        this->y = y0;
+        this->z = z0;
+        this->length = lenght;
+        this->height = height;
+        this->depth = depth;
+    }
+
+    bool ObstacleLiftDrag::is_inside_point(unsigned int x, unsigned int y, unsigned int z) const
+    {
+        bool x_inside = (x >= this->x) && (x <= (this-> x + this->length));
+        bool y_inside = (y >= this->y) && (y <= (this-> y + this->height));
+        bool z_inside = (z >= this->z) && (z <= (this-> z + this->depth));
+        return x_inside && y_inside && z_inside;
+    }
+
+
+    void ObstacleLiftDrag::operator()(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l) const
+    {
+        bool inside = is_inside_point(x, y, z);
+        if(!inside) return;
+
+        unsigned int obx = this->x;
+        unsigned int oby = this->y;
+        unsigned int obz = this->z;
+        unsigned int right = this->x + this->length;
+        unsigned int top = this->y + this->height;
+        unsigned int dep = this->z + this->depth;
+        std::cout << obx << "  " << oby << " " << obz << " " << right << " " << top << " " << dep << std::endl; 
+        double x_bounce = 0.0, y_bounce = 0.0, z_bounce = 0.0;
+        if(x == right) x_bounce = -1.0;
+        else if(x == obx) x_bounce = 1.0;
+        if(y == top) y_bounce = -1.0;
+        else if(y == oby) y_bounce = 1.0;
+        if(z == dep) z_bounce = -1.0;
+        else if (z == obz) z_bounce = 1.0;
+
+        
+
+        if(x_bounce == 0.0 && y_bounce == 0.0 && z_bounce == 0.0)
         {
-            unsigned int j = l.v->directionIndexInvert(i);
-            f(j) = p(i); 
+            f = VectorXd::Zero(l.v->getQ());
+            return;
+        }
+
+        const Eigen::MatrixXd& c = l.v->get_c();
+        VectorXd p = l.getPopulation(x,y,z);
+        for(unsigned int i = 0; i < l.v->getQ(); i++)
+        {
+            if(c(i, 0) == x_bounce || c(i, 1) == y_bounce || c(i, 2) == z_bounce)
+            {
+                unsigned int j = l.v->directionIndexInvert(i);
+                f(j) = p(i); 
+                std::cout << "yessir" << std::endl;
+            }
         }
     }
 }
-
 /*
 void ObstacleEast(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f, LBM& l)
 {
