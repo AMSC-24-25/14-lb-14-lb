@@ -9,9 +9,11 @@
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
 
-void LBM::init_equilibrium()
-{
-    std::cout << "Initializing simulation..." << std::endl;
+namespace LatticeBoltzmannMethod{
+
+    void LBM::init_equilibrium()
+    {
+        std::cout << "Initializing simulation..." << std::endl;
 
     #pragma omp parallel for default(none) schedule(static)
     for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
@@ -22,29 +24,20 @@ void LBM::init_equilibrium()
             {
                 applyInitial(x,y,z);
 
-                double rho = get_rho(x,y,z);
-                VectorXd u = get_u(x,y,z);
-                double unorm = u.norm();
-                double omusq = 1.0 - 1.5*(unorm * unorm);
-                ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd f = (rho * this->v->get_w()).array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
+                    double rho = get_rho(x,y,z);
+                    VectorXd u = get_u(x,y,z);
+                    double unorm = u.norm();
+                    double omusq = 1.0 - 1.5*(unorm * unorm);
+                    ArrayXd c3u = this->v->get_c() * (u * 3.0);
+                    VectorXd f = (rho * this->v->get_w()).array() * (1.0 * omusq + c3u * (c3u*0.5 + 1.0));
 
-                savePopulationInit(x,y,z, f);
+                    savePopulationInit(x,y,z, f);
+                }
             }
         }
+
+        std::cout << "Initialization completed." << std::endl;
     }
-
-    std::cout << "Initialization completed." << std::endl;
-}
-
-void LBM::init_obstacle() {
-    this -> obstacle.x = 3.0/7.0 * (this -> N.x);
-    this -> obstacle.y = 5.5/7.0 * (this -> N.y);
-    this -> obstacle.z = 3.0/7.0 * (this -> N.z);
-    this -> obstacle.length = 1.0/7.0 * (this -> N.x);
-    this -> obstacle.height = 1.0/7.0 * (this -> N.y);
-    this -> obstacle.depth = 1.0/7.0 * (this -> N.z);
-}
 
 void LBM::stream_collide_save()
 {
@@ -96,35 +89,35 @@ void LBM::stream_collide_save()
                 //classical stream
                 VectorXd stream = populationAdjacent(x,y,z);
                 //modify stream applying boundaries
-                applyBoundary(x,y,z, stream);
+                applyBoundaryAndObstacle(x,y,z, stream);
 
-                //compute moments
-                double rho = stream.sum();
-                set_rho(x,y,z, rho );
+                    //compute moments
+                    double rho = stream.sum();
+                    set_rho(x,y,z, rho );
 
-                double rhoinv = 1.0/rho;
+                    double rhoinv = 1.0/rho;
 
-                VectorXd cf_rhoinv = (this->v->get_c().transpose() * stream) * rhoinv;
-                VectorXd& u = cf_rhoinv;
-                set_u(x,y,z, u);
+                    VectorXd cf_rhoinv = (this->v->get_c().transpose() * stream) * rhoinv;
+                    VectorXd& u = cf_rhoinv;
+                    set_u(x,y,z, u);
 
-                //collision
-                double unorm = u.norm();
-                double omusq = 1.0 - 1.5*(unorm * unorm);
-                ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd twr = this->v->get_w() * tauinv * rho;
+                    //collision
+                    double unorm = u.norm();
+                    double omusq = 1.0 - 1.5*(unorm * unorm);
+                    ArrayXd c3u = this->v->get_c() * (u * 3.0);
+                    VectorXd twr = this->v->get_w() * tauinv * rho;
 
-                stream *= omtauinv;
-                stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
+                    stream *= omtauinv;
+                    stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
 
-                this->savePopulation(x,y,z, stream);
+                    this->savePopulation(x,y,z, stream);
+                }
             }
         }
-    }
 
-    this->step++;
-    std::cout << " Completed." << std::endl;
-}
+        this->step++;
+        std::cout << " Completed." << std::endl;
+    }
 
 
 LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(d), nu(nu)
@@ -159,78 +152,84 @@ LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM
     }
 }
 
-void LBM::applyInitial(unsigned int x, unsigned int y, unsigned int z)
-{
-    InitialCondition(x,y,z, *this );
-}
-
-void LBM::applyBoundary(unsigned int x, unsigned int y, unsigned int z, VectorXd& f)
-{
-    for(std::function<void (unsigned int, unsigned int, unsigned int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
-}
-
-void LBM::setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> initial_condition)
-{
-    this->InitialCondition = initial_condition;
-}
-
-void LBM::addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)> boundary)
-{
-    this->BoundaryConditions.push_back(boundary);
-}
-
-
-void LBM::saveToBin(unsigned int step)
-{
-    const std::string result_base_dir = "./bin_results/partition_" + std::to_string(x_loc.start) + "-" + std::to_string(x_loc.end) + "/";
-    std::filesystem::create_directories(result_base_dir);
-    
-    // Allocate arrays for the entire domain
-    std::vector<double> u_x(x_len_no_pad * N.y * N.z, 0.0);
-    std::vector<double> u_y(x_len_no_pad * N.y * N.z, 0.0);
-    std::vector<double> u_z(x_len_no_pad * N.y * N.z, 0.0);
-    unsigned int idx = 0;
-
-    for (unsigned int z = 0; z < N.z; ++z)
+    void LBM::applyInitial(unsigned int x, unsigned int y, unsigned int z)
     {
-        for (unsigned int y = 0; y < N.y; ++y)
+        InitialCondition(x,y,z, *this );
+    }
+
+    void LBM::applyBoundaryAndObstacle(unsigned int x, unsigned int y, unsigned int z, VectorXd& f)
+    {
+        for(std::function<void (unsigned int, unsigned int, unsigned int, Eigen::VectorXd &, LBM &)> bc : BoundaryConditions) bc(x,y,z, f, *this);
+        for(auto o : obstacles) (*o)(x, y, z, f, *this);
+    }
+
+    void LBM::setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> initial_condition)
+    {
+        this->InitialCondition = initial_condition;
+    }
+
+    void LBM::addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)> boundary)
+    {
+        this->BoundaryConditions.push_back(boundary);
+    }
+
+    void LBM::addObstacle(std::shared_ptr<Obstacle> o)
+    {
+        this->obstacles.push_back(o);
+    }
+
+    void LBM::saveToBin(unsigned int step)
+    {
+        const std::string result_base_dir = "./bin_results/partition_" + std::to_string(x_loc.start) + "-" + std::to_string(x_loc.end) + "/";
+        std::filesystem::create_directories(result_base_dir);
+        
+        // Allocate arrays for the entire domain
+        std::vector<double> u_x(x_len_no_pad * N.y * N.z, 0.0);
+        std::vector<double> u_y(x_len_no_pad * N.y * N.z, 0.0);
+        std::vector<double> u_z(x_len_no_pad * N.y * N.z, 0.0);
+        unsigned int idx = 0;
+
+        for (unsigned int z = 0; z < N.z; ++z)
         {
-            for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
+            for (unsigned int y = 0; y < N.y; ++y)
             {
-                unsigned int u_index = index_u(x, y, z);
+                for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
+                {
+                    unsigned int u_index = index_u(x, y, z);
 
-                u_x[idx] = this->u[u_index];
-                if (v->getD() > 1)
-                {
-                    u_y[idx] = this->u[u_index + 1];
+                        u_x[idx] = this->u[u_index];
+                        if (v->getD() > 1)
+                        {
+                            u_y[idx] = this->u[u_index + 1];
+                        }
+                        if (v->getD() == 3)
+                        {
+                            u_z[idx] = this->u[u_index + 2];
+                        }
+                        idx++;
+                    }
                 }
-                if (v->getD() == 3)
-                {
-                    u_z[idx] = this->u[u_index + 2];
-                }
-                idx++;
             }
+
+        // Save u_x to a binary file
+        std::ofstream file_u_x(result_base_dir + "/u_x_" + std::to_string(step) + ".bin", std::ios::binary);
+        file_u_x.write(reinterpret_cast<char*>(u_x.data()), u_x.size() * sizeof(double));
+        file_u_x.close();
+
+        // Save u_y to a binary file if applicable
+        if (v->getD() > 1)
+        {
+            std::ofstream file_u_y(result_base_dir + "/u_y_" + std::to_string(step) + ".bin", std::ios::binary);
+            file_u_y.write(reinterpret_cast<char*>(u_y.data()), u_y.size() * sizeof(double));
+            file_u_y.close();
         }
-    }
 
-    // Save u_x to a binary file
-    std::ofstream file_u_x(result_base_dir + "/u_x_" + std::to_string(step) + ".bin", std::ios::binary);
-    file_u_x.write(reinterpret_cast<char*>(u_x.data()), u_x.size() * sizeof(double));
-    file_u_x.close();
-
-    // Save u_y to a binary file if applicable
-    if (v->getD() > 1)
-    {
-        std::ofstream file_u_y(result_base_dir + "/u_y_" + std::to_string(step) + ".bin", std::ios::binary);
-        file_u_y.write(reinterpret_cast<char*>(u_y.data()), u_y.size() * sizeof(double));
-        file_u_y.close();
-    }
-
-    // Save u_z to a binary file if applicable
-    if (v->getD() == 3)
-    {
-        std::ofstream file_u_z(result_base_dir + "/u_z_" + std::to_string(step) + ".bin", std::ios::binary);
-        file_u_z.write(reinterpret_cast<char*>(u_z.data()), u_z.size() * sizeof(double));
-        file_u_z.close();
+        // Save u_z to a binary file if applicable
+        if (v->getD() == 3)
+        {
+            std::ofstream file_u_z(result_base_dir + "/u_z_" + std::to_string(step) + ".bin", std::ios::binary);
+            file_u_z.write(reinterpret_cast<char*>(u_z.data()), u_z.size() * sizeof(double));
+            file_u_z.close();
+        }
     }
 }
