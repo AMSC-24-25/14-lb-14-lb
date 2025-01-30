@@ -22,10 +22,10 @@ int main(int argc, char* argv[])
     LBM lbm = LBM(LBM::VelocitySet::D3Q19, d, nu);
     lbm.setInitialCondition(LidDrivenCavityInitial);
     std::cout << "Initial condition set for Lid Driven Cavity simulation." << std::endl;
-    lbm.addBoundaryCondition(MovingWall001);
-    std::cout << "Set upper (consifdering z axis) boundary as moving wall." << std::endl; 
     lbm.addBoundaryCondition(BounceBackAllBut001);
     std::cout << "Set any other wall for bounce-back." << std::endl; 
+    lbm.addBoundaryCondition(MovingWall001);
+    std::cout << "Set upper (consifdering z axis) boundary as moving wall." << std::endl; 
 
     //double start = seconds();
 

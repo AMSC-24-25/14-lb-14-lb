@@ -143,12 +143,12 @@ Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned
     const Eigen::MatrixXd& c = v->get_c();
     for(unsigned int i = 0; i < v->getQ(); ++i)
     {
-        unsigned int x_adj = x - c(i, 0);
-        unsigned int y_adj = y - ((v->getD() > 1) ? c(i, 1) : 0);
-        unsigned int z_adj = z - ((v->getD() == 3) ? c(i, 2) : 0);
-        if (x_adj >= 0 && x_adj < N.x &&
-            y_adj >= 0 && y_adj < N.y &&
-            z_adj >= 0 && z_adj < N.z)
+        int x_adj = x - c(i, 0);
+        int y_adj = y - ((v->getD() > 1) ? c(i, 1) : 0);
+        int z_adj = z - ((v->getD() == 3) ? c(i, 2) : 0);
+        if (x_adj >= 0 && x_adj < (int)N.x &&
+            y_adj >= 0 && y_adj < (int)N.y &&
+            z_adj >= 0 && z_adj < (int)N.z)
         {
             adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + N.x*N.y*N.z * (step & 1) * v->getQ() + i];
         }

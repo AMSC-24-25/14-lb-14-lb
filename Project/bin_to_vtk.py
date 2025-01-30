@@ -1,3 +1,4 @@
+#!/u/sw/toolchains/gcc-glibc/11.2.0/base/bin/python
 import numpy as np
 import os
 
@@ -55,8 +56,8 @@ def convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps):
 # Parametri del dominio e del simulatore
 input_folder = "./bin_results"  # Cartella dei risultati binari
 output_folder = "./vtk_results"  # Cartella dei risultati binari
-nx, ny, nz = 32, 32, 32  # Dimensioni del dominio
-steps = list(range(0, 2001, 40))  # Passi temporali salvati
+nx, ny, nz = 128, 128, 128  # Dimensioni del dominio
+steps = list(range(18000, 20000, 40))  # Passi temporali salvati
 
 # Converte i file binari in formato VTK
 convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps)
