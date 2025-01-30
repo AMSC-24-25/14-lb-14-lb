@@ -3,7 +3,6 @@
 #include "LidDrivenCavity3D.hpp"
 #include "ObstacleLiftDrag.hpp"
 #include <iostream>
-#include <omp.h>
 #include <fstream>
 #include <mpi.h>
 
@@ -20,7 +19,6 @@ namespace lb = LatticeBoltzmannMethod;
 
 int main(int argc, char* argv[])
 {
-    omp_set_num_threads(omp_get_max_threads());
 
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
