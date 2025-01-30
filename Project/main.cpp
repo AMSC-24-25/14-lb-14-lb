@@ -3,6 +3,7 @@
 #include "LidDrivenCavity3D.hpp"
 #include <iostream>
 #include <omp.h>
+#include <fstream>
 
 const unsigned int scale = 2;
 const unsigned int NX = 64*scale;
@@ -19,13 +20,28 @@ int main(int argc, char* argv[])
 
     //lbm object initialization
     LBM::dimensions d = {NX, NY, NZ};
-    LBM lbm = LBM(LBM::VelocitySet::D3Q19, d, nu);
+    LBM lbm = LBM(LBM::VelocitySet::D3Q27, d, nu);
     lbm.setInitialCondition(LidDrivenCavityInitial);
     std::cout << "Initial condition set for Lid Driven Cavity simulation." << std::endl;
     lbm.addBoundaryCondition(BounceBackAllBut001);
     std::cout << "Set any other wall for bounce-back." << std::endl; 
     lbm.addBoundaryCondition(MovingWall001);
     std::cout << "Set upper (consifdering z axis) boundary as moving wall." << std::endl; 
+
+    // Write simulation parameters to CSV file
+    const double u_max = Re/(6*NX);
+    std::ofstream csvFile("simulation_parameters.csv");
+    if (csvFile.is_open())
+    {
+        csvFile << "NX,NY,NZ,NSTEPS,NSAVE,U_MAX,RE\n";
+        csvFile << NX << "," << NY << "," << NZ << "," << NSTEPS << "," << NSAVE << "," << u_max << "," << Re << "\n";
+        csvFile.close();
+        std::cout << "Simulation parameters saved to simulation_parameters.csv." << std::endl;
+    }
+    else
+    {
+        std::cerr << "Unable to open file simulation_parameters.csv" << std::endl;
+    }
 
     //double start = seconds();
 

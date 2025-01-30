@@ -1,7 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
+import pandas as pd
 import imageio
 import os
+
+# Load simulation parameters
+params = pd.read_csv('simulation_parameters.csv')
+NX, NY, NZ, NSTEPS, SAVE_EVERY, Re = params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
+UMAX = params.iloc[0]['U_MAX']
 
 def read_binary_file(filename, shape):
     """Legge un file binario con double e lo converte in un array numpy di forma 'shape'."""
@@ -81,9 +88,8 @@ def create_velocity_gif(input_folder, output_gif, nx, ny, nz, steps, slice_z=0, 
 if __name__ == "__main__":
     input_folder = "./bin_results"
     output_gif = "vel_field.gif"
-    nx, ny, nz = 400, 400, 400
-    steps = range(0, 440, 40)   # ad esempio generiamo un frame ogni 40 step
+    steps = range(0, NSTEPS, SAVE_EVERY)   # ad esempio generiamo un frame ogni 40 step
     slice_z = 64               # se vogliamo la "metà" del dominio in z
     fps = 5
     
-    create_velocity_gif(input_folder, output_gif, nx, ny, nz, steps, slice_z, fps)
+    create_velocity_gif(input_folder, output_gif, NX, NY, NZ, steps, slice_z, fps)

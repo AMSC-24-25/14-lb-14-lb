@@ -1,6 +1,13 @@
 #!/u/sw/toolchains/gcc-glibc/11.2.0/base/bin/python
 import numpy as np
 import os
+import csv
+import pandas as pd
+
+# Load simulation parameters
+params = pd.read_csv('simulation_parameters.csv')
+NX, NY, NZ, NSTEPS, SAVE_EVERY, Re = params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
+UMAX = params.iloc[0]['U_MAX']
 
 # Funzione per leggere un file binario
 def read_binary_file(filename, shape):
@@ -56,8 +63,7 @@ def convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps):
 # Parametri del dominio e del simulatore
 input_folder = "./bin_results"  # Cartella dei risultati binari
 output_folder = "./vtk_results"  # Cartella dei risultati binari
-nx, ny, nz = 128, 128, 128  # Dimensioni del dominio
-steps = list(range(18000, 20000, 40))  # Passi temporali salvati
+steps = list(range(0, NSTEPS, SAVE_EVERY))  # Passi temporali salvati
 
 # Converte i file binari in formato VTK
-convert_bin_to_vtk(input_folder, output_folder, nx, ny, nz, steps)
+convert_bin_to_vtk(input_folder, output_folder, NX, NY, NZ, steps)

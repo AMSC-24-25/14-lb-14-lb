@@ -2,9 +2,6 @@
 
 using Eigen::VectorXd;
 
-const double Re = 100.0;
-const double rho0 = 1.0;
-
 void LidDrivenCavityInitial(unsigned int x, unsigned int y, unsigned int z, LBM& l)
 {
     l.set_rho(x,y,z, rho0);

@@ -181,4 +181,3 @@ void LBM::saveToBin(unsigned int step)
         file_u_z.close();
     }
 }
-
