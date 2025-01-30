@@ -45,37 +45,19 @@ void LBM::stream_collide_save()
         // useful constants
 
 // sync with other nodes
-#pragma omp parallel master num_threads(4)
-{
-        int a1, a2;
-        
         int overlap_size = N.y * N.z * v->getD();
+        double *right_u = u.get() + overlap_size * (x_len_no_pad - 1 - x_loc.left_pad); // last slice of computed u
+        MPI_Request request;
         if (x_loc.left_pad)
-        {
-            
-            #pragma omp task
-            {
-                MPI_Send(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD);
-            }
-
-            #pragma omp task
-            {
-                MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            }
-        }
-
+            MPI_Isend(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, &request);
         if (x_loc.right_pad)
-        {
-            double *right_u = u.get() + overlap_size * (x_len_no_pad - 1 - x_loc.left_pad); // last slice of computed u
-
-            #pragma omp task
-            {MPI_Recv(right_u + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);}
-
-            #pragma omp task
-            {MPI_Send(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD);}
-        }
+            MPI_Isend(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, &request);  
+        
+        if (x_loc.left_pad)
+            MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (x_loc.right_pad)
+            MPI_Recv(right_u + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     
-}
 
     #pragma omp parallel for default(none) schedule(static)
     for (unsigned int x = x_loc.start; x < x_loc.end; ++x)

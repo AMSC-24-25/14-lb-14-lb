@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 module load mpi/openmpi-x86_64
 
 CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp"
@@ -8,4 +8,4 @@ CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp"
 
 rm ldc_sim_mpi
 mpic++ ${CXXFLAGS} -I/usr/include LBM.hpp LBM.cpp VelocitySet.cpp LidDrivenCavity3D.hpp LidDrivenCavity3D.cpp ObstacleLiftDrag.hpp ObstacleLiftDrag.cpp  main.cpp -o ldc_sim_mpi 
-mpirun -n 14 ./ldc_sim_mpi
+mpirun -n 8 ./ldc_sim_mpi
