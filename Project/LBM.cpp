@@ -13,7 +13,9 @@ namespace LatticeBoltzmannMethod{
 
     void LBM::init_equilibrium()
     {
-        std::cout << "Initializing simulation..." << std::endl;
+        if (this->node_id == 0){
+            std::cout << "Initializing simulation..." << std::endl;
+        }
 
     #pragma omp parallel for default(none) schedule(static)
     for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
@@ -36,12 +38,16 @@ namespace LatticeBoltzmannMethod{
             }
         }
 
-        std::cout << "Initialization completed." << std::endl;
+        if (this->node_id == 0){
+            std::cout << "Initialization completed." << std::endl;
+        }        
     }
 
 void LBM::stream_collide_save()
 {
-    std::cout << "Simulating step " << this->step << "...  ";
+    if (this->node_id == 0){
+        std::cout << "Simulating step " << this->step << "...  ";
+    }
         // useful constants
 
 // sync with other nodes
@@ -126,7 +132,9 @@ void LBM::stream_collide_save()
         }
 
         this->step++;
-        std::cout << " Completed." << std::endl;
+        if (this->node_id == 0){
+            std::cout << " Completed." << std::endl;
+        }
     }
 
 
@@ -153,12 +161,13 @@ LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM
     rho = std::make_unique<double[]>(x_len * N.y * N.z);
     u = std::make_unique<double[]>(x_len * N.y * N.z * v->getD());
     
-    if(!quiet)
+    if(!quiet && world_rank == 0)
     {
+        std::cout << "\n------------------------------------------------------" << std::endl;
         std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << " lattice." << std::endl;
         std::cout << "The velocity has " << v->getQ() << " components." << std::endl;
         std::cout << "Kinematic viscosity was set to " << nu << "." << std::endl;
-        std::cout << "Start x = " + std::to_string(x_loc.start) + ", end x = " + std::to_string(x_loc.end) << std::endl;
+        std::cout << "------------------------------------------------------\n" << std::endl; 
     }
 }
 

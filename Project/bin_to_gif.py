@@ -1,163 +1,201 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import imageio
 import csv
 import pandas as pd
-import imageio
 import os
 
-# Carichiamo i parametri da CSV (come facevi già)
+# Load simulation parameters
 params = pd.read_csv('simulation_parameters.csv')
 NX, NY, NZ, NSTEPS, SAVE_EVERY, Re = params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
 UMAX = params.iloc[0]['U_MAX']
+world_size = params.iloc[0]['WORLD_SIZE']
 
 def read_binary_file(filename, shape):
-    """Legge un file binario con double e lo converte in un array numpy di forma 'shape'."""
+    """Reads a binary file of doubles and maps it into a Numpy array of shape `shape` (C-order)."""
     data = np.fromfile(filename, dtype=np.float64)
     return data.reshape(shape)
 
-def create_velocity_gif_with_arrows(
+def read_partition_u(input_folder, x_start, x_end, step, NZ, NY):
+    """
+    Reads the u_x, u_y, u_z files for the partition [x_start, x_end) and the requested step.
+    Returns three arrays (ux, uy, uz) of shape (NZ, NY, local_nx).
+    """
+    local_nx = x_end - x_start
+    part_dir = os.path.join(input_folder, f"partition_{x_start}-{x_end}")
+    
+    ux_file = os.path.join(part_dir, f"u_x_{step}.bin")
+    uy_file = os.path.join(part_dir, f"u_y_{step}.bin")
+    uz_file = os.path.join(part_dir, f"u_z_{step}.bin")
+
+    ux_local = read_binary_file(ux_file, (NZ, NY, local_nx))
+    uy_local = read_binary_file(uy_file, (NZ, NY, local_nx))
+    uz_local = read_binary_file(uz_file, (NZ, NY, local_nx))
+
+    return ux_local, uy_local, uz_local
+
+def assemble_full_domain(input_folder, x_splits, NX, NY, NZ, step):
+    """
+    Merges the data of all partitions (divided along x) into three arrays
+    (u_x, u_y, u_z) of shape (NZ, NY, NX).
+    """
+    ux_full = np.zeros((NZ, NY, NX), dtype=np.float64)
+    uy_full = np.zeros((NZ, NY, NX), dtype=np.float64)
+    uz_full = np.zeros((NZ, NY, NX), dtype=np.float64)
+    
+    for i in range(len(x_splits) - 1):
+        x_start = x_splits[i]
+        x_end   = x_splits[i+1]
+        
+        ux_loc, uy_loc, uz_loc = read_partition_u(input_folder, x_start, x_end, step, NZ, NY)
+        ux_full[:, :, x_start:x_end] = ux_loc
+        uy_full[:, :, x_start:x_end] = uy_loc
+        uz_full[:, :, x_start:x_end] = uz_loc
+    
+    return ux_full, uy_full, uz_full
+
+def get_partition_points(domain_size, world_size):
+    partition_x_size = float(domain_size) / world_size
+    partition_points = [round(partition_x_size * i) for i in range(int(world_size) + 1)]
+    return partition_points
+
+def create_velocity_gifs_mpi(
     input_folder,
     output_gif,
-    nx, ny, nz,
+    NX, NY, NZ,
+    x_splits,
     steps,
-    slice_y=0,
+    slice_y=0,      # fixed y => XZ plane
     fps=5,
     arrow_skip=4,
     arrow_gif_suffix="_arrows"
 ):
     """
-    Crea DUE GIF:
-      1) La mappa 2D del modulo della velocità
-      2) La stessa mappa 2D con sovrapposto un quiver (frecce) ogni 'arrow_skip' celle.
-
-    Parametri aggiuntivi rispetto alla versione base:
-    - arrow_skip: ogni quanti punti tracciare le frecce
-    - arrow_gif_suffix: suffisso da aggiungere al nome della seconda GIF
+    Creates two GIFs (3D → XZ plane extraction at y=slice_y):
+     1) only 2D velocity magnitude map
+     2) the same map with arrows (quiver).
     """
-    # Memorizziamo i frame di entrambe le GIF
     frames_no_arrows = []
     frames_arrows = []
-
-    # Creiamo due figure separate: una per la mappa liscia, una per la mappa con frecce
+    
     fig_no, ax_no = plt.subplots(figsize=(6,5))
     fig_ar, ax_ar = plt.subplots(figsize=(6,5))
-
-    # Loop su tutti gli step da salvare
+    
     for step in steps:
-        # Costruiamo i nomi dei file binari per le 3 componenti
-        ux_file = os.path.join(input_folder, f"u_x_{step}.bin")
-        uy_file = os.path.join(input_folder, f"u_y_{step}.bin")
-        uz_file = os.path.join(input_folder, f"u_z_{step}.bin")
+        # Reconstruct the entire domain
+        ux_full, uy_full, uz_full = assemble_full_domain(input_folder, x_splits, NX, NY, NZ, step)
         
-        # Leggiamo i file (array di shape (nz, ny, nx))
-        u_x = read_binary_file(ux_file, (nz, ny, nx))
-        u_y = read_binary_file(uy_file, (nz, ny, nx))
-        u_z = read_binary_file(uz_file, (nz, ny, nx))
+        # Velocity magnitude
+        velocity_magnitude = np.sqrt(ux_full**2 + uy_full**2 + uz_full**2) / UMAX
         
-        # Calcoliamo il modulo della velocità: shape (nz, ny, nx)
-        velocity_magnitude = np.sqrt(u_x**2 + u_y**2 + u_z**2)
+        # XZ plane extraction (shape: (NZ, NX))
+        velocity_2d = velocity_magnitude[:, slice_y, :]
+        ux_2d = ux_full[:, slice_y, :]
+        uz_2d = uz_full[:, slice_y, :]
         
-        # Estraiamo la "fetta" 2D con dimensioni (nz, nx), 
-        # facendo: velocity_2d = velocity_magnitude[:, slice_y, :] 
-        # (coerente con il tuo codice originale)
-        velocity_2d = velocity_magnitude[:, slice_y, :]  # shape (nz, nx)
-
-        # Prepariamo anche le 2D delle singole componenti (x e z) se vogliamo il quiver
-        # supponendo che nel piano (z,x) ci interessino (u_z, u_x) come coordinate delle frecce
-        # Oppure vuoi (u_x, u_y)? Dipende dal tuo scopo. Qui ipotizziamo (u_x, u_z).
-        ux_2d = u_x[:, slice_y, :]  # shape (nz, nx)
-        uz_2d = u_z[:, slice_y, :]  # shape (nz, nx)
-
-        ## ----------------- PRIMA FIGURA: senza frecce ----------------------
+        # --- FIGURE 1: no arrows ---
         ax_no.clear()
-        # Mostriamo la mappa 2D - in origin='lower' stiamo interpretando l'indice 0 come "in basso"
         im_no = ax_no.imshow(
             velocity_2d,
-            cmap='jet',
+            cmap='coolwarm',
             origin='lower',
-            extent=(0, nx, 0, nz),  # asse orizzontale: x in [0..nx], verticale: z in [0..nz]
+            extent=(0, NX, 0, NZ),
             vmin=0,
-            vmax=velocity_2d.max()
+            vmax=1
         )
-        ax_no.set_title(f"Step = {step}, slice_y = {slice_y} (no arrows)")
+        ax_no.set_title(f"Step = {step}, y={slice_y} (no arrows)")
         ax_no.set_xlabel("x")
         ax_no.set_ylabel("z")
-
-        # Convertiamo la figura in un'immagine e la salviamo nei frames_no_arrows
+        
+        if step == steps[0]:
+            fig_no.colorbar(im_no, ax=ax_no)
+            fig_no.suptitle("Velocity field normalized to u_max", fontsize=14)
+        
         fig_no.canvas.draw()
-        image_no = np.frombuffer(fig_no.canvas.tostring_rgb(), dtype='uint8')
-        image_no = image_no.reshape(fig_no.canvas.get_width_height()[::-1] + (3,))
+        # Previously used fig.canvas.tostring_rgb(), now using buffer_rgba()
+        buf_no = fig_no.canvas.buffer_rgba()
+        # Convert to NumPy array
+        image_no = np.frombuffer(buf_no, dtype=np.uint8)
+        # buffer_rgba produces an array with shape (h, w, 4)
+        image_no = image_no.reshape(fig_no.canvas.get_width_height()[::-1] + (4,))
+        # If you want to remove the alpha (last dimension) and keep only RGB:
+        image_no = image_no[..., :3]
+        image_no = image_no.copy()  # Copy to separate memory
+        
         frames_no_arrows.append(image_no)
-
-        ## ----------------- SECONDA FIGURA: con frecce ----------------------
+        
+        # --- FIGURE 2: with arrows ---
         ax_ar.clear()
-        # Mostriamo la stessa mappa
         im_ar = ax_ar.imshow(
             velocity_2d,
-            cmap='jet',
+            cmap='coolwarm',
             origin='lower',
-            extent=(0, nx, 0, nz),
+            extent=(0, NX, 0, NZ),
             vmin=0,
-            vmax=velocity_2d.max()
+            vmax=1
         )
-        ax_ar.set_title(f"Step = {step}, slice_y = {slice_y} (+ arrows)")
+        ax_ar.set_title(f"Step = {step}, y={slice_y}")
         ax_ar.set_xlabel("x")
         ax_ar.set_ylabel("z")
 
-        # Costruiamo la griglia di campionamento per le frecce
-        # arrow_skip controlla ogni quanti punti prendiamo in x e z
-        arrow_x = np.arange(0, nx, arrow_skip)
-        arrow_z = np.arange(0, nz, arrow_skip)
-        Xarrow, Zarrow = np.meshgrid(arrow_x, arrow_z)  # shape (len(arrow_z), len(arrow_x))
-
-        # Estraggo i valori corrispondenti di (u_x, u_z)
-        # occhio che l'indice riga corrisponde a z, la colonna a x
+        if step == steps[0]:
+            fig_ar.colorbar(im_ar, ax=ax_ar)
+            fig_ar.suptitle("Velocity field normalized to u_max", fontsize=14)
+        
+        # Quiver => (u_x, u_z) in (x,z)
+        arrow_x = np.arange(0, NX, arrow_skip)
+        arrow_z = np.arange(0, NZ, arrow_skip)
+        Xarrow, Zarrow = np.meshgrid(arrow_x, arrow_z)
+        
         Uarrow = ux_2d[Zarrow, Xarrow]
         Varrow = uz_2d[Zarrow, Xarrow]
-
-        # Disegniamo le frecce. Scale/regole di scaling da adattare a piacere.
-        # color='white' per contrastare con la colormap 'jet'.
+        
         ax_ar.quiver(
             Xarrow, Zarrow,
             Uarrow, Varrow,
             color='white',
-            scale=0.8  # puoi regolare scale a tuo piacimento
+            scale=0.8
         )
-
-        # Convertiamo la figura con frecce in un'immagine e la salviamo
+        
         fig_ar.canvas.draw()
-        image_ar = np.frombuffer(fig_ar.canvas.tostring_rgb(), dtype='uint8')
-        image_ar = image_ar.reshape(fig_ar.canvas.get_width_height()[::-1] + (3,))
+        buf_ar = fig_ar.canvas.buffer_rgba()
+        image_ar = np.frombuffer(buf_ar, dtype=np.uint8)
+        image_ar = image_ar.reshape(fig_ar.canvas.get_width_height()[::-1] + (4,))
+        image_ar = image_ar[..., :3]
+        image_ar = image_ar.copy()  # Copy to separate memory
+        
         frames_arrows.append(image_ar)
-
-    # Fine del loop su steps: chiudiamo le figure
+    
     plt.close(fig_no)
     plt.close(fig_ar)
-
-    # Salviamo la prima GIF (senza frecce)
+    
+    # GIF 1 (without arrows)
     imageio.mimsave(output_gif, frames_no_arrows, fps=fps)
-    print(f"GIF salvata (senza frecce): {output_gif}")
-
-    # Salviamo la seconda GIF (con frecce)
+    print(f"GIF saved (without arrows): {output_gif}")
+    
+    # GIF 2 (with arrows)
     base, ext = os.path.splitext(output_gif)
     output_gif_arrows = base + arrow_gif_suffix + ext
     imageio.mimsave(output_gif_arrows, frames_arrows, fps=fps)
-    print(f"GIF salvata (con frecce): {output_gif_arrows}")
+    print(f"GIF saved (with arrows): {output_gif_arrows}")
 
-
-# ESEMPIO di utilizzo
+# Example usage
 if __name__ == "__main__":
-    input_folder = "./bin_results"
-    output_gif = "vel_field.gif"
     steps = range(0, NSTEPS, SAVE_EVERY)
-    slice_y = 64
-    fps = 5
-    arrow_skip = 6  # ogni 4 celle disegniamo una freccia
-
-    create_velocity_gif_with_arrows(
+    x_splits = get_partition_points(NX, world_size)
+    
+    input_folder = "./bin_results"
+    output_gif   = "vel_field.gif"
+    
+    slice_y    = 32
+    fps        = 5
+    arrow_skip = 4
+    
+    create_velocity_gifs_mpi(
         input_folder=input_folder,
         output_gif=output_gif,
-        nx=NX, ny=NY, nz=NZ,
+        NX=NX, NY=NY, NZ=NZ,
+        x_splits=x_splits,
         steps=steps,
         slice_y=slice_y,
         fps=fps,
