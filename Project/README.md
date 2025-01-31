@@ -66,7 +66,7 @@ To verify the correctness and physical behavior of the model, a comparison was m
 
 To validate the 3D version of the code, the results were compared with those obtained through the pseudospectral method from <a href="https://www.sciencedirect.com/science/article/pii/0021999187901902">"
     Hwar C. Ku, Richard S. Hirsh, Thomas D. Taylor, <i>A pseudospectral method for solution of the three-dimensional incompressible Navier-Stokes equations</i>"
-</a>. Data correspond to values of normal velocities along the axes parallel to the x- and y-axis passing through the center, with Re = 100, Re = 400 and Re = 1000.
+</a>. Data correspond to values of normal velocities along the axes parallel to the x- and y-axis passing through the center of a cubic cavity, with Re = 100, Re = 400 and Re = 1000.
 
 <p align="center">
   <img height="300" alt="" src="extra/grafico_u.png"> 
