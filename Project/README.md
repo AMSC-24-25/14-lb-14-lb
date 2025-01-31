@@ -64,6 +64,9 @@ To verify the correctness and physical behavior of the model, a comparison was m
   <img width="400" alt="" src="extra/u_plot.png"> <img width="400" alt="" src="extra/v_plot.png">
 </p>
 
+To validate the 3D version of the code, the results were compared with those obtained through the pseudospectral method from Hwar C. Ku, Richard S. Hirsh, Thomas D. Taylor, <i>A pseudospectral method for solution of the three-dimensional incompressible Navier-Stokes equations</i>, <i>Journal of Computational Physics</i>, Volume 70, Issue 2, 1987, Pages 439-462.
+</a>. Data correspond to values of normal velocities along the axes parallel to the x- and y-axis passing through the center, with Re = 100, Re = 400 and Re = 1000.
+
 ## Strong and Weak Scalability Test
 The model has been parallelized using OpenMP. In order to understand how performance scales with the dimension of the domain and with the number of threads used during the computation, some scalability tests have been performed.
 
