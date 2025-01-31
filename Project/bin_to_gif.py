@@ -103,7 +103,7 @@ def create_velocity_gifs_mpi(
             vmin=0,
             vmax=1
         )
-        ax_no.set_title(f"Step = {step}, y={slice_y} (no arrows)")
+        ax_no.set_title(f"Step = {step}, y={slice_y}")
         ax_no.set_xlabel("x")
         ax_no.set_ylabel("z")
         
@@ -154,7 +154,7 @@ def create_velocity_gifs_mpi(
             Xarrow, Zarrow,
             Uarrow, Varrow,
             color='white',
-            scale=0.8
+            scale=2.0
         )
         
         fig_ar.canvas.draw()
@@ -168,15 +168,20 @@ def create_velocity_gifs_mpi(
     
     plt.close(fig_no)
     plt.close(fig_ar)
-    
+
+    n = len(frames_arrows)
+    frame_duration = 1000.0 / fps
+    durations = [frame_duration] * (n - 1)
+    durations.append(2000.0)  # Last frame duration = 2s
+
     # GIF 1 (without arrows)
-    imageio.mimsave(output_gif, frames_no_arrows, fps=fps)
+    imageio.mimsave(output_gif, frames_no_arrows, duration=durations, loop=0)
     print(f"GIF saved (without arrows): {output_gif}")
     
     # GIF 2 (with arrows)
     base, ext = os.path.splitext(output_gif)
     output_gif_arrows = base + arrow_gif_suffix + ext
-    imageio.mimsave(output_gif_arrows, frames_arrows, fps=fps)
+    imageio.mimsave(output_gif_arrows, frames_arrows, duration=durations, loop=0)
     print(f"GIF saved (with arrows): {output_gif_arrows}")
 
 # Example usage
@@ -188,7 +193,7 @@ if __name__ == "__main__":
     output_gif   = "vel_field.gif"
     
     slice_y    = 32
-    fps        = 5
+    fps        = 10
     arrow_skip = 4
     
     create_velocity_gifs_mpi(
