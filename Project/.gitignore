@@ -1,4 +1,9 @@
 results/bin_results/*
 results/vtk_results/*
+results/simulation_parameters.csv
+validation
+vel_field.gif
+vel_field_arrows.gif
+
 ldc_sim
 build

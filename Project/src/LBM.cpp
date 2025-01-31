@@ -199,7 +199,7 @@ LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM
 
     void LBM::saveToBin(unsigned int step)
     {
-        const std::string result_base_dir = "./bin_results/partition_" + std::to_string(x_loc.start) + "-" + std::to_string(x_loc.end) + "/";
+        const std::string result_base_dir = "./results/bin_results/partition_" + std::to_string(x_loc.start) + "-" + std::to_string(x_loc.end) + "/";
         std::filesystem::create_directories(result_base_dir);
         
         // Allocate arrays for the entire domain

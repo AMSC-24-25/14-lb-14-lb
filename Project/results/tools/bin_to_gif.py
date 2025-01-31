@@ -6,7 +6,7 @@ import pandas as pd
 import os
 
 # Load simulation parameters
-params = pd.read_csv('simulation_parameters.csv')
+params = pd.read_csv('results/simulation_parameters.csv')
 NX, NY, NZ, NSTEPS, SAVE_EVERY, Re = params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
 UMAX = params.iloc[0]['U_MAX']
 world_size = params.iloc[0]['WORLD_SIZE']
@@ -189,8 +189,8 @@ if __name__ == "__main__":
     steps = range(0, NSTEPS, SAVE_EVERY)
     x_splits = get_partition_points(NX, world_size)
     
-    input_folder = "./bin_results"
-    output_gif   = "vel_field.gif"
+    input_folder = "results/bin_results"
+    output_gif   = "./vel_field.gif"
     
     slice_y    = 32
     fps        = 10

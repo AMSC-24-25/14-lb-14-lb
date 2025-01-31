@@ -4,7 +4,7 @@ import csv
 import pandas as pd
 
 # Load simulation parameters
-params = pd.read_csv('simulation_parameters.csv')
+params = pd.read_csv('results/simulation_parameters.csv')
 NX, NY, NZ, NSTEPS, SAVE_EVERY, RE= params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
 UMAX = params.iloc[0]['U_MAX']
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     step = (NSTEPS // SAVE_EVERY) * SAVE_EVERY
     
     # Cartella dove trovi i file binari
-    input_folder = "./bin_results"
+    input_folder = "results/bin_results"
     
     # File CSV di uscita
     if not os.path.exists(f"./validation/{RE}/"):

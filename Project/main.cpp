@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     // Write simulation parameters to CSV file
     if (world_rank ==0){
         const double u_max = lb::Re/(6*NX);
-        std::ofstream csvFile("simulation_parameters.csv");
+        std::ofstream csvFile("results/simulation_parameters.csv");
         if (csvFile.is_open())
         {
             csvFile << "NX,NY,NZ,NSTEPS,NSAVE,U_MAX,RE,WORLD_SIZE\n";
@@ -79,8 +79,6 @@ int main(int argc, char* argv[])
             std::cerr << "Unable to open file simulation_parameters.csv" << std::endl;
         }
     }
-
-    //double start = seconds();
 
     lbm.init_equilibrium();
 
@@ -100,10 +98,6 @@ int main(int argc, char* argv[])
         }
 
     }
-
-    
-    //double end = seconds();
-    //double runtime = end-start;
 
  
     MPI_Finalize();
