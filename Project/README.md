@@ -4,8 +4,13 @@
 This project implements a Lattice Boltzmann Method (LBM) simulation, a numerical method widely used in fluid dynamics and related computational physics applications. The project is written in C++ and includes core functionalities to initialize the simulation, handle collisions and streaming, apply boundary conditions, and visualize results.
 
 ## Algorithm
-The Project follows the algorithm idea described in "An Introduction to the Lattice Boltzmann Method: A
-Numerical Method for Complex Boundary and Moving Boundary Flows." (Inamuro, T., Yoshino, M., & Suzuki, K.)
+
+
+
+The project follows the algorithm idea described in <a href="https://link.springer.com/book/10.1007/978-3-319-44649-3">"
+    T. Krüger, H. Kusumaatmaja, A. Kuzmin, O. Shardt, G. Silva and E. M. Viggen, <i>The Lattice Boltzmann Method - 
+Principles and Practice</i>"
+</a>.
 
 <p align="center">
   <img width="600" alt="" src="extra/algorithm.png">
@@ -69,7 +74,7 @@ To validate the 3D version of the code, the results were compared with those obt
 </a>. Data correspond to values of normal velocities along the axes parallel to the x- and y-axis passing through the center of a cubic cavity, with Re = 100, Re = 400 and Re = 1000.
 
 <p align="center">
-  <img height="300" alt="" src="extra/grafico_u.png"> 
+  <img height="300" alt="" src="extra/grafico_u_2.png"> 
   <img height="300" alt="" src="extra/grafico_v.png">
 </p>
 
