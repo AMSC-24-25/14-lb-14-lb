@@ -1,2 +1,4 @@
-bin_results/*
+results/bin_results/*
+results/vtk_results/*
 ldc_sim
+build

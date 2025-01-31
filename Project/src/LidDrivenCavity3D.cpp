@@ -1,4 +1,4 @@
-#include "LidDrivenCavity3D.hpp"
+#include <LatticeBoltzmannMethod/LidDrivenCavity3D.hpp>
 
 using Eigen::VectorXd;
 

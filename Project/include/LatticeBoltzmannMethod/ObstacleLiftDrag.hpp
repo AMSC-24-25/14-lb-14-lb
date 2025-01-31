@@ -1,7 +1,7 @@
 #ifndef __OLD_H
 #define __OLD_H
-#include "Obstacle.hpp"
-#include "LBM.hpp"
+#include <Obstacle.hpp>
+#include <LBM.hpp>
 
 namespace LatticeBoltzmannMethod{
 

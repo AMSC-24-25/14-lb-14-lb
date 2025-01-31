@@ -1,4 +1,4 @@
-#include "ObstacleLiftDrag.hpp"
+#include <LatticeBoltzmannMethod/ObstacleLiftDrag.hpp>
 
 using Eigen::VectorXd;
 

@@ -1,4 +1,4 @@
-#include "LBM.hpp"
+#include <LatticeBoltzmannMethod/LBM.hpp>
 #include <iostream>
 #include <filesystem> 
 #include <iomanip>

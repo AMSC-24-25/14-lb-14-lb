@@ -4,7 +4,7 @@
 #include <exception>
 #include <eigen3/Eigen/Dense>
 #include <iostream>
-#include "Obstacle.hpp"
+#include <LatticeBoltzmannMethod/Obstacle.hpp>
 
 #ifndef __LBM_H
 #define __LBM_H

@@ -1,4 +1,4 @@
-#include "LBM.hpp"
+#include <LatticeBoltzmannMethod/LBM.hpp>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
