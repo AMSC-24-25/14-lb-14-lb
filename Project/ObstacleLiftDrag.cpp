@@ -34,7 +34,6 @@ namespace LatticeBoltzmannMethod{
         unsigned int right = this->x + this->length;
         unsigned int top = this->y + this->height;
         unsigned int dep = this->z + this->depth;
-        std::cout << obx << "  " << oby << " " << obz << " " << right << " " << top << " " << dep << std::endl; 
         double x_bounce = 0.0, y_bounce = 0.0, z_bounce = 0.0;
         if(x == right) x_bounce = -1.0;
         else if(x == obx) x_bounce = 1.0;
@@ -59,7 +58,7 @@ namespace LatticeBoltzmannMethod{
             {
                 unsigned int j = l.v->directionIndexInvert(i);
                 f(j) = p(i); 
-                std::cout << "yessir" << std::endl;
+                //std::cout << "yessir" << std::endl;
             }
         }
     }

@@ -45,18 +45,21 @@ void LBM::stream_collide_save()
         // useful constants
 
 // sync with other nodes
-        int overlap_size = N.y * N.z * v->getD();
-        double *right_u = u.get() + overlap_size * (x_len_no_pad - 1 - x_loc.left_pad); // last slice of computed u
+        int population_offset = x_len*N.y*N.z * v->getQ() * (step & 1);
+        int overlap_size = N.y * N.z * v->getQ();
+        double *right_p = population.get() + population_offset + index_f(x_loc.end-1, 0, 0); // last slice of computed population
+        double *left_p  = population.get() + population_offset + index_f(x_loc.start, 0, 0); // first slice of computed population
         MPI_Request request;
-        if (x_loc.left_pad)
-            MPI_Isend(u.get() + overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, &request);
-        if (x_loc.right_pad)
-            MPI_Isend(right_u, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, &request);  
         
         if (x_loc.left_pad)
-            MPI_Recv(u.get(), overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Isend(left_p, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, &request);
         if (x_loc.right_pad)
-            MPI_Recv(right_u + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Isend(right_p, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, &request);  
+        
+        if (x_loc.left_pad)
+            MPI_Recv(left_p - overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (x_loc.right_pad)
+            MPI_Recv(right_p + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     
 
     #pragma omp parallel for default(none) schedule(static)
