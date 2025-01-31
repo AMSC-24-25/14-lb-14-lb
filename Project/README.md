@@ -17,14 +17,21 @@ Principles and Practice</i>"
 </p>
 
 ## Features
-- Configurable grid size and simulation parameters.
-- Implements core LBM operations (collision, streaming, boundary conditions).
-- Parallel implementation using OpenMP.
+The implementation is inspired by the math and science libraries we deal with in other HPC courses. A set of modular classes and other features grant high configurability in simulation setting.
+- The `LBM` class is the core of the simulation. It allows to set simulations with domains of different dimensionality and velocity sets, and fluid density. It implements the main steps of the simulation as intializing the domain at equilibrium or streaming and collide operations, in a modular fashion. 
+
+- Freedom in setting is mainly granted from the implementation of initial and boundary conditions as functions created outside of the class, from the user himself maybe, but called from the class object. Similarly, obstacles are implemented as classes derived from an abstract functor class, that can be added as members of an object of the `LBM` class.
+
+- Performance needs asked for parallelization: the methods are implemented to work with OpenMP and MPI.
+
 
 ## File Structure
-- **`LBM.h`**: Header file defining the `LBM` class, constants and its methods.
+- **`LBM.hpp`**: Header file defining the `LBM` class, constants and its methods.
 - **`LBM.cpp`**: Implementation of the `LBM` class, including the main computational methods.
-- **`main.cpp`**: Entry point for the simulation. Sets up the `LBM` object, initializes parameters, runs the simulation, and outputs results.
+- **`Obstacle.hpp`**: defines the abstract class for obstacles.
+- **`LidDrivenCavity3D.hpp`** and **`LidDrivenCavity3D.cpp`**: specific declaration and definition of a set of initial and boundary conditions that can be added to and `LBM` object to simulate a cavity with a moving wall.
+-**`ObstacleLiftDrag.hpp`**: an obstacle implementation for cubic, still obstacle.
+- **`main.cpp`**: Entry point for the simulation. Sets up the `LBM` object, initializes parameters, adds initial and boundary conditions for the cavity simulation, adds an obstacle, runs the simulation, and outputs results.
 
 ## Requirements
 - g++ compiler with C++17 support or higher.
