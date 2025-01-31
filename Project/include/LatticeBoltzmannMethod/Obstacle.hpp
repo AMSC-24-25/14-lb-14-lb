@@ -1,6 +1,6 @@
 #ifndef _LBM_OBSTALCE
 #define _LBM_OBSTALCE
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace LatticeBoltzmannMethod{
 

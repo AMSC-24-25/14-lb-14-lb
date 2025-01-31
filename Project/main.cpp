@@ -1,7 +1,6 @@
-#include "seconds.h"
-#include "LBM.hpp"
-#include "LidDrivenCavity3D.hpp"
-#include "ObstacleLiftDrag.hpp"
+#include <LatticeBoltzmannMethod/LBM.hpp>
+#include <LatticeBoltzmannMethod/LidDrivenCavity3D.hpp>
+#include <LatticeBoltzmannMethod/ObstacleLiftDrag.hpp>
 #include <iostream>
 #include <fstream>
 #include <mpi.h>

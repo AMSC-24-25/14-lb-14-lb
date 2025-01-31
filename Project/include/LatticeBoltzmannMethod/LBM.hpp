@@ -2,7 +2,7 @@
 #include <functional>
 #include <vector>
 #include <exception>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <iostream>
 #include <LatticeBoltzmannMethod/Obstacle.hpp>
 

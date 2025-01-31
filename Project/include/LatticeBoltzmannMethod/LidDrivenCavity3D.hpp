@@ -1,6 +1,6 @@
 #ifndef __LDC_H
 #define __LDC_H
-#include <LBM.hpp>
+#include <LatticeBoltzmannMethod/LBM.hpp>
 
 namespace LatticeBoltzmannMethod{
 
