@@ -1,13 +1,8 @@
-#!/bin/bash
+#!/bin/bash -l
+module load mpi/openmpi-x86_64
 
-CXXFLAGS="-std=c++17 -pedantic -O3 -Wall -fopenmp"
-
-# for mac:
-# g++ LBM.o seconds.o main.o -o sim
-
-#classes at the moment
-cmake .
-make
+rm -rf ./build/*
+cmake . && make
 
 singularity  build --fakeroot --force lbm.sif conf.def
 
