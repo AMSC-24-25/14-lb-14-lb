@@ -12,4 +12,4 @@ cmake . && make
 
 singularity  build --fakeroot --force lbm.sif conf.def
 
-singularity exec --bind bin_results:$HOME/bin_results lbm.sif mpirun -np 8 ./lbm_sim
+singularity exec --bind results/bin_results:$HOME/bin_results lbm.sif mpirun -np 8 ./lbm_sim
