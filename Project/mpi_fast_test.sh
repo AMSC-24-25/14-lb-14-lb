@@ -1,8 +1,6 @@
-#!/bin/bash -l
+#!/bin/bash
 
-cd build
-cmake ..
+cmake .
 make
-cd ..
 ./build/lbm_sim
 python results/tools/bin_to_gif.py

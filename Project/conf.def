@@ -2,9 +2,9 @@ Bootstrap: docker
 FROM: fedora
 
 %post
-    dnf5 install cmake g++ eigen3-devel cat openmpi-devel openmpi python3 -y 
+    dnf5 install eigen3 openmpi -y 
     echo "MPI installed successfully"
-    mkdir bin_results
+    mkdir -p results/bin_results
 
 %environment
     export OMPI=/usr/lib64/openmpi
