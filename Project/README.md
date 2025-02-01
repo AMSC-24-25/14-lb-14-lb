@@ -35,12 +35,9 @@ The implementation is inspired by the math and science libraries we deal with in
 
 ## Requirements
 - g++ compiler with C++17 support or higher.
-- OpenMP dev package.
-
-## Requirements
-- g++ compiler with C++17 support or higher.
 - Eigen3-dev package.
 - OpenMP dev package.
+- MPI dev package
 - singularity-ce
 
 ## Compilation and Execution
@@ -55,26 +52,20 @@ or fast build and execution:
 
 
 ## How to Use
-1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g., grid size, time steps).
-2. Compile and run the simulation.
-3. Run the bin_to_gif.py to create the visualization representation of the simulation.
+1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g. grid size, time steps, obstacle) and Reynolds number in `LidDrivenCavity3D.hpp`.
+2. Run `mpi_fast_test.sh` tu build and run the code.
 
 ## Example Output
-The simulation outputs velocity fields, density distributions, and other relevant physical quantities. 
- Each output is saved as a binary file at each timestep and can be converted to a GIF.
+The simulation outputs velocity fields. 
+ Each output is saved as a binary file at each timestep and can be converted to a GIF or VTK files.
 
 The final result is a GIF like this:
 
 <p align="center">
-  <img width="400" alt="" src="extra/velocity_evolution.gif"> <img width="400" alt="" src="extra/velocity_evolution_arrows.gif">
+  <img width="400" alt="" src="extra/Re200.gif"> <img width="400" alt="" src="extra/Re200_arrows.gif">
 </p>
 
 ## Code Validation
-To verify the correctness and physical behavior of the model, a comparison was made with results from <a href="https://www.sciencedirect.com/science/article/pii/0021999182900584">"U. Ghia, K. N. Ghia, C. T. Shin, *High-Re solutions for incompressible flow using Navier-Stokes equations and multigrid method*"</a>. Data correspond to the geometric center of the cavity at Re = 100.
-
-<p align="center">
-  <img width="400" alt="" src="extra/u_plot.png"> <img width="400" alt="" src="extra/v_plot.png">
-</p>
 
 To validate the 3D version of the code, the results were compared with those obtained through the pseudospectral method from <a href="https://www.sciencedirect.com/science/article/pii/0021999187901902">"
     Hwar C. Ku, Richard S. Hirsh, Thomas D. Taylor, <i>A pseudospectral method for solution of the three-dimensional incompressible Navier-Stokes equations</i>"
@@ -85,12 +76,6 @@ To validate the 3D version of the code, the results were compared with those obt
   <img height="300" alt="" src="extra/grafico_v.png">
 </p>
 
-## Strong and Weak Scalability Test
-The model has been parallelized using OpenMP. In order to understand how performance scales with the dimension of the domain and with the number of threads used during the computation, some scalability tests have been performed.
-
-<p align="center">
-  <img width="400" alt="" src="extra/strong_scalability.png"> <img width="400" alt="" src="extra/weak_scalability.png">
-</p>
 
 ## Authors
 Luca Donato, \
