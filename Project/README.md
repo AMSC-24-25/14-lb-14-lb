@@ -25,7 +25,7 @@ The implementation is inspired by the math and science libraries we deal with in
 - Performance needs asked for parallelization: the methods are implemented to work with OpenMP and MPI.
 
 
-## File Structure
+## Main File Structure
 - **`LBM.hpp`**: Header file defining the `LBM` class, constants and its methods.
 - **`LBM.cpp`**: Implementation of the `LBM` class, including the main computational methods.
 - **`Obstacle.hpp`**: defines the abstract class for obstacles.
@@ -47,13 +47,16 @@ full pipeline (build mpi executable - build singularity container - run ) includ
    ```
 or fast build and execution:
    ```bash
+   mkdir build
    bash mpi_fast_test.sh
    ```
 
 
 ## How to Use
 1. Modify the simulation parameters in `main.cpp` to suit your needs (e.g. grid size, time steps, obstacle) and Reynolds number in `LidDrivenCavity3D.hpp`.
-2. Run `mpi_fast_test.sh` tu build and run the code.
+2. Run `mpi_fast_test.sh` to build and run the code.
+
+If you want to play around without following the bash script, remember to run cmake inside the `build` folder, and to run any execution form the `Project` folder, for file management reasons.
 
 ## Example Output
 The simulation outputs velocity fields. 
