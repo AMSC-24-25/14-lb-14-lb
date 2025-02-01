@@ -5,7 +5,8 @@
 namespace LatticeBoltzmannMethod{
 
     class LBM;
-
+    //an abstract class to add customized obstacles inside an LBM domain
+    //(derived classe's instantitation)
     class Obstacle
     {
         public:

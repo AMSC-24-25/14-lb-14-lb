@@ -17,14 +17,14 @@ namespace LatticeBoltzmannMethod{
             std::cout << "Initializing simulation..." << std::endl;
         }
 
-    #pragma omp parallel for default(none) schedule(static)
-    for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
-    {
-        for(unsigned int y = 0; y < this->N.y; ++y)
+        #pragma omp parallel for default(none) schedule(static)
+        for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
         {
-            for(unsigned int z = 0; z < this->N.z; ++z)
+            for(unsigned int y = 0; y < this->N.y; ++y)
             {
-                applyInitial(x,y,z);
+                for(unsigned int z = 0; z < this->N.z; ++z)
+                {
+                    applyInitial(x,y,z);
 
                     double rho = get_rho(x,y,z);
                     VectorXd u = get_u(x,y,z);
@@ -43,14 +43,14 @@ namespace LatticeBoltzmannMethod{
         }        
     }
 
-void LBM::stream_collide_save()
-{
-    if (this->node_id == 0){
-        std::cout << "Simulating step " << this->step << "...  ";
-    }
+    void LBM::stream_collide_save()
+    {
+        if (this->node_id == 0){
+            std::cout << "Simulating step " << this->step << "...  ";
+        }
         // useful constants
 
-// sync with other nodes
+        // sync with other nodes
         int population_offset = x_len*N.y*N.z * v->getQ() * (step & 1);
         int overlap_size = N.y * N.z * v->getQ();
         double *right_p = population.get() + population_offset + index_f(x_loc.end-1, 0, 0); // last slice of computed population
@@ -68,19 +68,19 @@ void LBM::stream_collide_save()
             MPI_Recv(right_p + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     
 
-    #pragma omp parallel for default(none) schedule(static)
-    for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
-    {
-        for(unsigned int y = 0; y < this->N.y; ++y)
+        #pragma omp parallel for default(none) schedule(static)
+        for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
         {
-            for(unsigned int z = 0; z < this->N.z; ++z)
+            for(unsigned int y = 0; y < this->N.y; ++y)
             {
-                //classical stream
-                VectorXd stream = populationAdjacent(x,y,z);
-                //modify stream applying boundaries
-                applyBoundaryAndObstacle(x,y,z, stream);
+                for(unsigned int z = 0; z < this->N.z; ++z)
+                {
+                    //classical stream
+                    VectorXd stream = populationAdjacent(x,y,z);
+                    //modify stream applying boundaries
+                    applyBoundaryAndObstacle(x,y,z, stream);
 
-                    //compute moments
+                        //compute moments
                     double rho = stream.sum();
                     set_rho(x,y,z, rho );
 
@@ -90,41 +90,41 @@ void LBM::stream_collide_save()
                     VectorXd& u = cf_rhoinv;
                     set_u(x,y,z, u);
 
-                //collision
-                double unorm = u.norm();
-                double omusq = 1.0 - 1.5*(unorm * unorm);
-                ArrayXd c3u = this->v->get_c() * (u * 3.0);
-                VectorXd twr = this->v->get_w() * rho;
+                    //collision
+                    double unorm = u.norm();
+                    double omusq = 1.0 - 1.5*(unorm * unorm);
+                    ArrayXd c3u = this->v->get_c() * (u * 3.0);
+                    VectorXd twr = this->v->get_w() * rho;
 
-                int dim = v->getQ()/2+1;
+                    int dim = v->getQ()/2+1;
 
-                VectorXd feq = (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) ));
-                VectorXd ftsym(dim);
-                VectorXd ftanti(dim);
-                VectorXd feqsym(dim);
-                VectorXd feqanti(dim);
+                    VectorXd feq = (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) ));
+                    VectorXd ftsym(dim);
+                    VectorXd ftanti(dim);
+                    VectorXd feqsym(dim);
+                    VectorXd feqanti(dim);
 
-                for (int i = 0; i < dim; i++) {
-                    int idx = v->directionIndexBase(i);
-                    int inv = v->directionIndexInvert(idx);
-                    ftsym[i] = stream[idx];
-                    ftanti[i] = stream[inv];
-                    feqsym[i] = feq[idx];
-                    feqanti[i] = feq[inv];
-                }
+                    for (int i = 0; i < dim; i++) {
+                        int idx = v->directionIndexBase(i);
+                        int inv = v->directionIndexInvert(idx);
+                        ftsym[i] = stream[idx];
+                        ftanti[i] = stream[inv];
+                        feqsym[i] = feq[idx];
+                        feqanti[i] = feq[inv];
+                    }
 
-                VectorXd sym = omgSym * (ftsym + ftanti - feqsym - feqanti) / 2.0;
-                VectorXd anti = omgAnti * (ftsym - ftanti - feqsym + feqanti) / 2.0;
+                    VectorXd sym = omgSym * (ftsym + ftanti - feqsym - feqanti) / 2.0;
+                    VectorXd anti = omgAnti * (ftsym - ftanti - feqsym + feqanti) / 2.0;
 
-                for (int i = 0; i < dim; i++) {
-                    int idx = v->directionIndexBase(i);
-                    int inv = v->directionIndexInvert(idx);
-                    stream[idx] -= sym[i] + anti[i];
-                    stream[inv] -= sym[i] - anti[i];
-                }
+                    for (int i = 0; i < dim; i++) {
+                        int idx = v->directionIndexBase(i);
+                        int inv = v->directionIndexInvert(idx);
+                        stream[idx] -= sym[i] + anti[i];
+                        stream[inv] -= sym[i] - anti[i];
+                    }
 
-                //stream *= omtauinv;
-                //stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
+                    //stream *= omtauinv;
+                    //stream += (twr.array() * ( omusq + c3u * (1.0 + 0.5*c3u) )).matrix(); 
 
                     this->savePopulation(x,y,z, stream);
                 }
@@ -138,38 +138,38 @@ void LBM::stream_collide_save()
     }
 
 
-LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(d), nu(nu)
-{
-    v = std::make_unique<VelocitySet>(vSet);
-    if(N.x == 0 || N.y == 0 || N.z == 0)
+    LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(d), nu(nu)
     {
-        throw std::invalid_argument(std::string{"Setting problem size to zero!!\n"});
-    }
-    if((v->getD() == 1 && (N.y != 1 || N.z != 1)) || (v->getD() == 2 && N.z != 1))
-    {
-        throw std::invalid_argument(std::string{"Incompatible size and velocity set dimension!!\n"});
-    }
+        v = std::make_unique<VelocitySet>(vSet);
+        if(N.x == 0 || N.y == 0 || N.z == 0)
+        {
+            throw std::invalid_argument(std::string{"Setting problem size to zero!!\n"});
+        }
+        if((v->getD() == 1 && (N.y != 1 || N.z != 1)) || (v->getD() == 2 && N.z != 1))
+        {
+            throw std::invalid_argument(std::string{"Incompatible size and velocity set dimension!!\n"});
+        }
 
-    double partition_x_size = double(N.x) / world_size;
-    x_loc = {std::lround(partition_x_size * world_rank), std::lround(partition_x_size * (world_rank + 1)), world_rank != 0, world_rank != world_size - 1};
-    x_len = x_loc.end - x_loc.start + x_loc.left_pad + x_loc.right_pad;
-    x_len_no_pad = x_loc.end - x_loc.start;
-    node_id = world_rank;
+        double partition_x_size = double(N.x) / world_size;
+        x_loc = {std::lround(partition_x_size * world_rank), std::lround(partition_x_size * (world_rank + 1)), world_rank != 0, world_rank != world_size - 1};
+        x_len = x_loc.end - x_loc.start + x_loc.left_pad + x_loc.right_pad;
+        x_len_no_pad = x_loc.end - x_loc.start;
+        node_id = world_rank;
 
 
-    population = std::make_unique<double[]>(x_len * N.y * N.z * v->getQ() * 2);
-    rho = std::make_unique<double[]>(x_len * N.y * N.z);
-    u = std::make_unique<double[]>(x_len * N.y * N.z * v->getD());
-    
-    if(!quiet && world_rank == 0)
-    {
-        std::cout << "\n------------------------------------------------------" << std::endl;
-        std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << " lattice." << std::endl;
-        std::cout << "The velocity has " << v->getQ() << " components." << std::endl;
-        std::cout << "Kinematic viscosity was set to " << nu << "." << std::endl;
-        std::cout << "------------------------------------------------------\n" << std::endl; 
+        population = std::make_unique<double[]>(x_len * N.y * N.z * v->getQ() * 2);
+        rho = std::make_unique<double[]>(x_len * N.y * N.z);
+        u = std::make_unique<double[]>(x_len * N.y * N.z * v->getD());
+        
+        if(!quiet && world_rank == 0)
+        {
+            std::cout << "\n------------------------------------------------------" << std::endl;
+            std::cout << "Lattice Boltzmann Simulation configured with a " << N.x << "x" << N.y << "x" << N.z << " lattice." << std::endl;
+            std::cout << "The velocity has " << v->getQ() << " components." << std::endl;
+            std::cout << "Kinematic viscosity was set to " << nu << "." << std::endl;
+            std::cout << "------------------------------------------------------\n" << std::endl; 
+        }
     }
-}
 
     void LBM::applyInitial(unsigned int x, unsigned int y, unsigned int z)
     {

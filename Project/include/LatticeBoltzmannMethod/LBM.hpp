@@ -11,6 +11,7 @@
 
 namespace LatticeBoltzmannMethod{
 
+    //a class for customized simulations using Lattice Boltzmann Method
     class LBM 
     {
         public:
@@ -20,7 +21,9 @@ namespace LatticeBoltzmannMethod{
                     enum StandardSet { D1Q3, D2Q9, D3Q15, D3Q19, D3Q27 };
                 
                 protected: 
+                    //dimension of the domain's vector space
                     const unsigned int D;
+                    //directions considered for the mesoscopic simulation of the fluid
                     const unsigned int Q;
                     Eigen::MatrixXd c;
                     Eigen::VectorXd w;
@@ -44,18 +47,22 @@ namespace LatticeBoltzmannMethod{
             std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition;
             std::vector<std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>> BoundaryConditions;
             std::vector<std::shared_ptr<Obstacle>> obstacles;
+            
             struct dimensions {
                 unsigned int x;
                 unsigned int y;
                 unsigned int z;
             } const N;
             struct x_location
-    {
-        long start;
-        long end;
-        bool left_pad;
-        bool right_pad;
-    } x_loc; 
+
+            {
+                long start;
+                long end;
+                bool left_pad;
+                bool right_pad;
+            } x_loc; 
+
+
             const double nu;
             const double tau = 3.0*nu+0.5;
             const double cs = 1.0 / 1.73205080756887729352;
@@ -68,9 +75,9 @@ namespace LatticeBoltzmannMethod{
             bool computeFlowProperties;
             bool quiet = false;
             unsigned int step = 0;
-        int node_id;
-        int x_len_no_pad;
-        int x_len;
+            int node_id;
+            int x_len_no_pad;
+            int x_len;
 
             std::unique_ptr<double[]> population;
             std::unique_ptr<double[]> rho;
@@ -80,7 +87,7 @@ namespace LatticeBoltzmannMethod{
             void init_equilibrium();
             void stream_collide_save();
 
-        LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
+            LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu);
 
             void setInitialCondition(std::function<void(unsigned int,unsigned int,unsigned int, LBM&)> InitialCondition);
             void addBoundaryCondition(std::function<void(unsigned int,unsigned int,unsigned int, Eigen::VectorXd&, LBM&)>);
@@ -138,64 +145,64 @@ namespace LatticeBoltzmannMethod{
         } 
     }
 
-Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int z)
-{
-    Eigen::VectorXd p( v->getQ() );
-    //const Eigen::MatrixXd& c = v->get_c();
-    for(unsigned int i = 0; i < v->getQ(); ++i)
+    Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int z)
     {
-        p(i) = this->population[index_f(x, y, z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
-    } 
-    return p;
-}
-
-
-Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned int z) //PLEASE CHECK THIS FUNCTION
-{
-    Eigen::VectorXd adj( v->getQ() );
-    const Eigen::MatrixXd& c = v->get_c();
-    for(unsigned int i = 0; i < v->getQ(); ++i)
-    {
-        int x_adj = x - c(i, 0);
-        int y_adj = y - ((v->getD() > 1) ? c(i, 1) : 0);
-        int z_adj = z - ((v->getD() == 3) ? c(i, 2) : 0);
-        if (x_adj >= 0 && x_adj < (int)N.x &&
-            y_adj >= 0 && y_adj < (int)N.y &&
-            z_adj >= 0 && z_adj < (int)N.z)
+        Eigen::VectorXd p( v->getQ() );
+        //const Eigen::MatrixXd& c = v->get_c();
+        for(unsigned int i = 0; i < v->getQ(); ++i)
         {
-            adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
-        }
-        else
-        {
-            adj(i) = 0.0;
-        }
-    }  
-
-        return adj;
+            p(i) = this->population[index_f(x, y, z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
+        } 
+        return p;
     }
 
-void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
-{
-    for(unsigned int i = 0; i < v->getQ(); ++i)
-    {
-        this->population[index_f(x,y,z) + x_len*N.y*N.z * (~step & 1) * v->getQ() + i] = population(i);
-    }     
-}
 
-//ON THE ZERO STEP, THE POPULATION IS SAVED TO THE SECOND HALF OF THE ARRAY 
-void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
-{
-    for(unsigned int i = 0; i < v->getQ(); ++i)
+    Eigen::VectorXd LBM::populationAdjacent(unsigned int x, unsigned int y, unsigned int z) //PLEASE CHECK THIS FUNCTION
     {
-        this->population[index_f(x,y,z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
-    }     
-}
+        Eigen::VectorXd adj( v->getQ() );
+        const Eigen::MatrixXd& c = v->get_c();
+        for(unsigned int i = 0; i < v->getQ(); ++i)
+        {
+            int x_adj = x - c(i, 0);
+            int y_adj = y - ((v->getD() > 1) ? c(i, 1) : 0);
+            int z_adj = z - ((v->getD() == 3) ? c(i, 2) : 0);
+            if (x_adj >= 0 && x_adj < (int)N.x &&
+                y_adj >= 0 && y_adj < (int)N.y &&
+                z_adj >= 0 && z_adj < (int)N.z)
+            {
+                adj(i) = this->population[index_f(x_adj, y_adj, z_adj) + x_len*N.y*N.z * (step & 1) * v->getQ() + i];
+            }
+            else
+            {
+                adj(i) = 0.0;
+            }
+        }  
 
-unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { 
-    check_coordinates(x,y,z);
-    x = x - x_loc.start + x_loc.left_pad;
-    return (N.y * x + y) * N.z + z;
-}
+            return adj;
+        }
+
+    void LBM::savePopulation(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
+    {
+        for(unsigned int i = 0; i < v->getQ(); ++i)
+        {
+            this->population[index_f(x,y,z) + x_len*N.y*N.z * (~step & 1) * v->getQ() + i] = population(i);
+        }     
+    }
+
+    //ON THE ZERO STEP, THE POPULATION IS SAVED TO THE SECOND HALF OF THE ARRAY 
+    void LBM::savePopulationInit(unsigned int x, unsigned int y, unsigned int z, const Eigen::VectorXd& population)
+    {
+        for(unsigned int i = 0; i < v->getQ(); ++i)
+        {
+            this->population[index_f(x,y,z) + x_len*N.y*N.z * (step & 1) * v->getQ() + i] = population(i);
+        }     
+    }
+
+    unsigned int LBM::index_r(unsigned int x, unsigned int y, unsigned int z) { 
+        check_coordinates(x,y,z);
+        x = x - x_loc.start + x_loc.left_pad;
+        return (N.y * x + y) * N.z + z;
+    }
 
     unsigned int LBM::index_u(unsigned int x, unsigned int y, unsigned int z) { 
         check_coordinates(x,y,z);

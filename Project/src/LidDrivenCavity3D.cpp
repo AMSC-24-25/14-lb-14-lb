@@ -3,8 +3,8 @@
 using Eigen::VectorXd;
 
 namespace LatticeBoltzmannMethod{
-void LidDrivenCavityInitial(unsigned int x, unsigned int y, unsigned int z, LBM& l)
-{
+    void LidDrivenCavityInitial(unsigned int x, unsigned int y, unsigned int z, LBM& l)
+    {
         l.set_rho(x,y,z, rho0);
         
         VectorXd u(3);
