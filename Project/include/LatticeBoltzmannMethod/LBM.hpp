@@ -22,7 +22,7 @@ namespace LatticeBoltzmannMethod{
                 
                 protected: 
                     //dimension of the domain's vector space
-                    const unsigned int D;
+                    const unsigned int D;//@note this could have been a case for a template parameter
                     //directions considered for the mesoscopic simulation of the fluid
                     const unsigned int Q;
                     Eigen::MatrixXd c;
@@ -37,6 +37,9 @@ namespace LatticeBoltzmannMethod{
                     const Eigen::VectorXd& get_w();
                     // Given the i-th direction of the velocity set, 
                     //the method returns the index of the direction opposed to it
+                    //@note it is not an error but it is useless to return a const value.
+                    //@note the method should be const (it does not change the state of the class) not the returned value. 
+                    //@note There are also other methods that shoudl have been const
                     const unsigned int directionIndexInvert(unsigned int i);
                     const unsigned int directionIndexBase(unsigned int i);
                 private:
@@ -65,7 +68,7 @@ namespace LatticeBoltzmannMethod{
 
             const double nu;
             const double tau = 3.0*nu+0.5;
-            const double cs = 1.0 / 1.73205080756887729352;
+            const double cs = 1.0 / 1.73205080756887729352;//@note this could be constexpr
             const double omgSym = 1/(nu/(cs*cs)+0.5);
             const double lambda = 0.25; //Provides the most stable simulations according to the book
             const double omgAnti = 1/(lambda*cs*cs/nu + 0.5);
@@ -116,9 +119,9 @@ namespace LatticeBoltzmannMethod{
             void applyBoundaryAndObstacle(unsigned int x, unsigned int y, unsigned int z, Eigen::VectorXd& f);
 
             inline void check_coordinates(unsigned int x, unsigned int y, unsigned int z);
-            inline unsigned int index_r(unsigned int x, unsigned int y, unsigned int z);
-            inline unsigned int index_u(unsigned int x, unsigned int y, unsigned int z);
-            inline unsigned int index_f(unsigned int x, unsigned int y, unsigned int z);
+            inline unsigned int index_r(unsigned int x, unsigned int y, unsigned int z);//@note this should be const or constexpr
+            inline unsigned int index_u(unsigned int x, unsigned int y, unsigned int z);//@note this should be const or constexpr
+            inline unsigned int index_f(unsigned int x, unsigned int y, unsigned int z);//@note this should be const or constexpr
     };
 
 
@@ -126,7 +129,7 @@ namespace LatticeBoltzmannMethod{
     const double LBM::get_rho(unsigned int x, unsigned int y, unsigned int z) { return rho[index_r(x,y,z)]; }
     void LBM::set_rho(unsigned int x, unsigned int y, unsigned int z, double rho) { this->rho[index_r(x,y,z)] = rho; }
 
-    const Eigen::VectorXd LBM::get_u(unsigned int x, unsigned int y, unsigned int z)
+    const Eigen::VectorXd LBM::get_u(unsigned int x, unsigned int y, unsigned int z)//@note this should be const
     {
         Eigen::VectorXd u(v->getD());
         for(unsigned int i = 0; i < v->getD(); ++i)
@@ -145,7 +148,7 @@ namespace LatticeBoltzmannMethod{
         } 
     }
 
-    Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int z)
+    Eigen::VectorXd LBM::getPopulation(unsigned int x, unsigned int y, unsigned int z)//@note this should be const
     {
         Eigen::VectorXd p( v->getQ() );
         //const Eigen::MatrixXd& c = v->get_c();

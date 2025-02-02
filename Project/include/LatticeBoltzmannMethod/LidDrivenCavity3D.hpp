@@ -4,6 +4,7 @@
 
 namespace LatticeBoltzmannMethod{
 
+    //@note I would have read the parameters from a file, so to be able to change them without recompiling the code
     const double Re = 100.0;
     const double rho0 = 1.0;
 

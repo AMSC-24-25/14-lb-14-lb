@@ -57,6 +57,7 @@ namespace LatticeBoltzmannMethod{
         double *left_p  = population.get() + population_offset + index_f(x_loc.start, 0, 0); // first slice of computed population
         MPI_Request request;
         
+        //@note maybe this is a case to use MPI_Sendrecv
         if (x_loc.left_pad)
             MPI_Isend(left_p, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, &request);
         if (x_loc.right_pad)
