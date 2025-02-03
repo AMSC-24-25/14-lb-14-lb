@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <mpi.h>
+#include <chrono>
 
 const unsigned int scale = 2;
 const unsigned int NX = 64*scale;
