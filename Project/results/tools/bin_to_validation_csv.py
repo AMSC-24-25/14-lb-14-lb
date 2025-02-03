@@ -3,99 +3,127 @@ import os
 import csv
 import pandas as pd
 
-# Load simulation parameters
-params = pd.read_csv('results/simulation_parameters.csv')
+# Carichiamo i parametri di simulazione
+params = pd.read_csv('./results/simulation_parameters.csv')
 NX, NY, NZ, NSTEPS, SAVE_EVERY, RE= params.iloc[0][['NX', 'NY', 'NZ', 'NSTEPS', 'NSAVE', 'RE']].astype(int).values
 UMAX = params.iloc[0]['U_MAX']
+world_size = params.iloc[0]['WORLD_SIZE']
 
+# Esempio di definizione partizionamento lungo x.
+# Se NON sai a priori i confini, puoi impostarli a mano, oppure
+# eseguire uno script per leggere le subdirectory 'partition_*-*' e dedurre i x_splits.
+# Qui assumiamo un esempio con 2 partizioni: [0, NX//2, NX].
 def read_binary_file(filename, shape):
     """
-    Reads a binary file in double precision
-    and maps it into a NumPy array of shape `shape`,
-    assuming that the memory order is C-order.
-    shape = (nz, ny, nx).
+    Legge un file binario in double precision
+    e lo rimappa in un array NumPy di forma `shape`,
+    assumendo che l'ordine in memoria sia C-order.
+    shape = (nz, ny, local_nx).
     """
     data = np.fromfile(filename, dtype=np.float64)
     return data.reshape(shape)
 
+def get_partition_points(domain_size, world_size):
+    partition_x_size = float(domain_size) / world_size
+    partition_points = [round(partition_x_size * i) for i in range(int(world_size) + 1)]
+    return partition_points
+
+def read_partition_variable(
+    input_folder, x_start, x_end, step, NZ, NY, varName
+):
+    """
+    Legge il file binario 'u_<varName>_<step>.bin' per la partizione [x_start, x_end),
+    e lo restituisce come array di shape (NZ, NY, local_nx).
+    Esempio: varName = 'z' => 'u_z_<step>.bin'
+    """
+    local_nx = x_end - x_start
+    part_dir = os.path.join(input_folder, f"partition_{x_start}-{x_end}")
+    filename = os.path.join(part_dir, f"u_{varName}_{step}.bin")
+    
+    # Leggiamo i dati
+    arr_local = read_binary_file(filename, (NZ, NY, local_nx))
+    return arr_local
+
+def assemble_full_variable(
+    input_folder, x_splits, NX, NY, NZ, step, varName
+):
+    """
+    Ricostruisce la variabile 'u_<varName>' sull'intero dominio (NZ, NY, NX),
+    unendo i dati dalle varie partizioni (lungo x).
+    Ritorna un array di shape (NZ, NY, NX).
+    """
+    full_arr = np.zeros((NZ, NY, NX), dtype=np.float64)
+    
+    for i in range(len(x_splits) - 1):
+        x_start = x_splits[i]
+        x_end   = x_splits[i+1]
+        
+        part_local = read_partition_variable(input_folder, x_start, x_end, step, NZ, NY, varName)
+        # Inseriamo nella porzione x_start:x_end
+        full_arr[:, :, x_start:x_end] = part_local
+    
+    return full_arr
 
 def extract_z_velocity_line(input_folder, step, nx, ny, nz, output_csv):
     """
-    - Reads the z component of the velocity from 'u_z_<step>.bin'
-    - Extracts the values of u_z along the line parallel to the x-axis
-      that passes through (y = ny//2, z = nz//2).
-    - Saves in a CSV with columns: step, x, y, z, u_z
+    - Ricostruisce la componente z della velocità unendo le partizioni
+    - Estrae i valori di u_z lungo la linea parallela all'asse x,
+      che passa per (y=ny//2, z=nz//2).
+    - Salva in un CSV con colonne: step,x,y,z,u_z
     """
-    # Binary file of the z component
-    uz_file = os.path.join(input_folder, f"u_z_{step}.bin")
+    # Ricostruisci u_z (forma (nz, ny, nx))
+    u_z = assemble_full_variable(input_folder, x_splits, nx, ny, nz, step, varName='z')
     
-    # Load the data into an array (nz, ny, nx)
-    u_z = read_binary_file(uz_file, (nz, ny, nx))
-    
-    # Calculate the index of y and z at the center
+    # Calcoliamo l'indice di y e z al centro
     yc = ny // 2
     zc = nz // 2
     
-    # Open a CSV file for writing
+    # Apriamo un file CSV in scrittura
     with open(output_csv, 'w') as out:
-        # Write a header (optional)
         out.write("step,x,y,z,u_z\n")
-        
-        # Loop over x from 0 to nx-1
+        # Cicliamo su x
         for x in range(nx):
-            # Read the velocity u_z at (z=zc, y=yc, x)
             val_uz = u_z[zc, yc, x]
-            
-            # Write the CSV row
-            # Example format: 1000, 12, 32, 32, 0.02345
             out.write(f"{step},{x},{yc},{zc},{val_uz}\n")
 
 def extract_x_velocity_line(input_folder, step, nx, ny, nz, output_csv):
     """
-    - Reads the x component of the velocity from 'u_x_<step>.bin'
-    - Extracts the values of u_x along the line parallel to the x-axis
-      that passes through (y = ny//2, z = nz//2).
-    - Saves in a CSV with columns: step, x, y, z, u_x
+    - Ricostruisce la componente x della velocità unendo le partizioni
+    - Estrae i valori di u_x lungo la linea parallela all'asse z,
+      che passa per (y=ny//2, x=nx//2). (Nota: sto interpretando "parallel=asse x"
+      in modo coerente con la funzione org, ma sembra più un "parallel=asse z" data la descrizione)
+    - Salva in un CSV con colonne: step,x,y,z,u_x
     """
-    # Binary file of the x component
-    ux_file = os.path.join(input_folder, f"u_x_{step}.bin")
+    # Ricostruisci u_x (forma (nz, ny, nx))
+    u_x = assemble_full_variable(input_folder, x_splits, nx, ny, nz, step, varName='x')
     
-    # Load the data into an array (nz, ny, nx)
-    u_x = read_binary_file(ux_file, (nz, ny, nx))
-    
-    # Calculate the index of y and z at the center
+    # Indici centrali
     xc = nx // 2
     yc = ny // 2
     
-    # Open a CSV file for writing
+    # Salviamo i valori scorrendo z in [0..nz-1], e x=xc, y=yc fissi
     with open(output_csv, 'w') as out:
-        # Write a header (optional)
         out.write("step,x,y,z,u_x\n")
-        
-        # Loop over z from 0 to nz-1
         for z in range(nz):
-            # Read the velocity u_x at (x=xc, y=yc, z)
             val_ux = u_x[z, yc, xc]
-            
-            # Write the CSV row
-            # Example format: 1000, 12, 32, 32, 0.02345
             out.write(f"{step},{xc},{yc},{z},{val_ux}\n")
 
-
-# Example usage
+# Esempio d'uso
 if __name__ == "__main__":
+    # Scegli lo step da cui estrarre i dati
     step = (NSTEPS // SAVE_EVERY) * SAVE_EVERY
+    x_splits = get_partition_points(NX, world_size)
     
-    # Cartella dove trovi i file binari
-    input_folder = "results/bin_results"
+    # Cartella dove trovi i file binari MPI
+    input_folder = "./results/bin_results"
     
-    # Output CSV file
-    if not os.path.exists(f"./validation/{RE}/"):
-        os.makedirs(f"./validation/{RE}/")
-
+    # Cartella di output per i CSV
+    os.makedirs(f"./validation/{RE}/", exist_ok=True)
+    
     output_csv_z = f"./validation/{RE}/u_z_line_center.csv"
     output_csv_x = f"./validation/{RE}/u_x_line_center.csv"
     
     extract_z_velocity_line(input_folder, step, NX, NY, NZ, output_csv_z)
     extract_x_velocity_line(input_folder, step, NX, NY, NZ, output_csv_x)
-    print(f"CSV files generated! Check '{output_csv_z}' and '{output_csv_x}'.")
+    
+    print(f"CSV generati! Guarda '{output_csv_z}' e '{output_csv_x}'.")
