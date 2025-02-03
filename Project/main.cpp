@@ -19,6 +19,8 @@ namespace lb = LatticeBoltzmannMethod;
 int main(int argc, char* argv[])
 {
 
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
@@ -99,7 +101,14 @@ int main(int argc, char* argv[])
 
     }
 
- 
     MPI_Finalize();
+
+    if(world_rank == 0)
+    {
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() << " s\n";
+    }
+
 }
 
