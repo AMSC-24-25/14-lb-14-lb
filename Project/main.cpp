@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     if (world_rank == 0) {
         std::cout << "Set upper (considering z axis) boundary as moving wall." << std::endl;
     }
-    auto ob = std::make_shared<lb::ObstacleLiftDrag>(3.0/7.0 * NX, 5.5/7.0 * NY, 3.0/7.0 * NZ , 1.0/7.0 * NX, 1.0/7.0 * NY, 1.0/7.0 * NZ);
+    auto ob = std::make_shared<lb::ObstacleLiftDrag>((NX/2) - 0.15 * NX, (NY/2) - 0.15 * NY, (NZ/2) - 0.15 * NZ, 0.3 * NX, 0.3 * NY, 0.3 * NZ);
     lbm.addObstacle(ob);
     if (world_rank == 0) {
         std::cout << "Set boundary for obstacle" << std::endl;
