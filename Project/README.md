@@ -76,7 +76,7 @@ To validate the 3D version of the code, the results were compared with those obt
 
 <p align="center">
   <img height="300" alt="" src="extra/grafico_u_2.png"> 
-  <img height="300" alt="" src="extra/grafico_v.png">
+  <img height="300" alt="" src="extra/grafico_v2.png">
 </p>
 
 
