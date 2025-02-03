@@ -71,29 +71,35 @@ def create_velocity_gifs_mpi(
     arrow_gif_suffix="_arrows"
 ):
     """
-    Creates two GIFs (3D → XZ plane extraction at y=slice_y):
-     1) only 2D velocity magnitude map
-     2) the same map with arrows (quiver).
+    Creates three GIFs from the simulation on the XZ plane (with fixed y):
+     1) normalized velocity map (without arrows)
+     2) the same map with arrows (quiver)
+     3) the same map with iso-velocity lines (contours)
     """
     frames_no_arrows = []
-    frames_arrows = []
-    
+    frames_arrows    = []
+    frames_iso       = []  # For the third GIF (contours)
+
+    # FIGURE WITHOUT ARROWS
     fig_no, ax_no = plt.subplots(figsize=(6,5))
+    # FIGURE WITH ARROWS
     fig_ar, ax_ar = plt.subplots(figsize=(6,5))
+    # FIGURE WITH ISO-VELOCITY CONTOURS
+    fig_iso, ax_iso = plt.subplots(figsize=(6,5))
     
     for step in steps:
-        # Reconstruct the entire domain
+        # Reconstruction of the entire domain
         ux_full, uy_full, uz_full = assemble_full_domain(input_folder, x_splits, NX, NY, NZ, step)
         
-        # Velocity magnitude
+        # Calculation of normalized velocity
         velocity_magnitude = np.sqrt(ux_full**2 + uy_full**2 + uz_full**2) / UMAX
         
-        # XZ plane extraction (shape: (NZ, NX))
+        # Extraction of the XZ plane (shape: (NZ, NX))
         velocity_2d = velocity_magnitude[:, slice_y, :]
         ux_2d = ux_full[:, slice_y, :]
         uz_2d = uz_full[:, slice_y, :]
         
-        # --- FIGURE 1: no arrows ---
+        # --- FIGURE 1: Without arrows ---
         ax_no.clear()
         im_no = ax_no.imshow(
             velocity_2d,
@@ -112,19 +118,15 @@ def create_velocity_gifs_mpi(
             fig_no.suptitle("Velocity field normalized to u_max", fontsize=14)
         
         fig_no.canvas.draw()
-        # Previously used fig.canvas.tostring_rgb(), now using buffer_rgba()
         buf_no = fig_no.canvas.buffer_rgba()
-        # Convert to NumPy array
         image_no = np.frombuffer(buf_no, dtype=np.uint8)
-        # buffer_rgba produces an array with shape (h, w, 4)
         image_no = image_no.reshape(fig_no.canvas.get_width_height()[::-1] + (4,))
-        # If you want to remove the alpha (last dimension) and keep only RGB:
         image_no = image_no[..., :3]
         image_no = image_no.copy()  # Copy to separate memory
         
         frames_no_arrows.append(image_no)
         
-        # --- FIGURE 2: with arrows ---
+        # --- FIGURE 2: With arrows (quiver) ---
         ax_ar.clear()
         im_ar = ax_ar.imshow(
             velocity_2d,
@@ -142,7 +144,7 @@ def create_velocity_gifs_mpi(
             fig_ar.colorbar(im_ar, ax=ax_ar)
             fig_ar.suptitle("Velocity field normalized to u_max", fontsize=14)
         
-        # Quiver => (u_x, u_z) in (x,z)
+        # Creation of arrows (quiver) => (u_x, u_z) in (x,z)
         arrow_x = np.arange(0, NX, arrow_skip)
         arrow_z = np.arange(0, NZ, arrow_skip)
         Xarrow, Zarrow = np.meshgrid(arrow_x, arrow_z)
@@ -165,14 +167,57 @@ def create_velocity_gifs_mpi(
         image_ar = image_ar.copy()  # Copy to separate memory
         
         frames_arrows.append(image_ar)
+        
+        # --- FIGURE 3: With iso-velocity lines (contours) ---
+        ax_iso.clear()
+        im_iso = ax_iso.imshow(
+            velocity_2d,
+            cmap='Greys',
+            origin='lower',
+            extent=(0, NX, 0, NZ),
+            vmin=0,
+            vmax=1
+        )
+        # Construct x and z coordinates consistent with extent
+        x_coords = np.linspace(0, NX, velocity_2d.shape[1])
+        z_coords = np.linspace(0, NZ, velocity_2d.shape[0])
+        # Define contour levels (iso-velocity)
+        levels = np.linspace(0, 1, 10)
+        CS = ax_iso.contour(
+            x_coords,
+            z_coords,
+            velocity_2d,
+            levels=levels,
+            colors='red',
+            linewidths=1.5
+        )
+        # Add labels to contours
+        ax_iso.clabel(CS, inline=True, fontsize=8)
+        ax_iso.set_title(f"Step = {step}, y={slice_y} (Iso-velocity)")
+        ax_iso.set_xlabel("x")
+        ax_iso.set_ylabel("z")
+        
+        if step == steps[0]:
+            fig_iso.colorbar(im_iso, ax=ax_iso)
+            fig_iso.suptitle("Velocity field normalized to u_max (Iso-velocity lines)", fontsize=14)
+        
+        fig_iso.canvas.draw()
+        buf_iso = fig_iso.canvas.buffer_rgba()
+        image_iso = np.frombuffer(buf_iso, dtype=np.uint8)
+        image_iso = image_iso.reshape(fig_iso.canvas.get_width_height()[::-1] + (4,))
+        image_iso = image_iso[..., :3]
+        image_iso = image_iso.copy()  # Copy to separate memory
+        
+        frames_iso.append(image_iso)
     
     plt.close(fig_no)
     plt.close(fig_ar)
+    plt.close(fig_iso)
 
     n = len(frames_arrows)
     frame_duration = 1000.0 / fps
     durations = [frame_duration] * (n - 1)
-    durations.append(2000.0)  # Last frame duration = 2s
+    durations.append(2000.0)  # Duration of the last frame = 2s
 
     # GIF 1 (without arrows)
     imageio.mimsave(output_gif, frames_no_arrows, duration=durations, loop=0)
@@ -183,6 +228,11 @@ def create_velocity_gifs_mpi(
     output_gif_arrows = base + arrow_gif_suffix + ext
     imageio.mimsave(output_gif_arrows, frames_arrows, duration=durations, loop=0)
     print(f"GIF saved (with arrows): {output_gif_arrows}")
+    
+    # GIF 3 (with iso-velocity lines)
+    output_gif_iso = base + "_iso" + ext
+    imageio.mimsave(output_gif_iso, frames_iso, duration=durations, loop=0)
+    print(f"GIF saved (with iso-velocity lines): {output_gif_iso}")
 
 # Example usage
 if __name__ == "__main__":

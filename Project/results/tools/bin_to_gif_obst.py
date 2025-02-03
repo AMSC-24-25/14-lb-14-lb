@@ -74,12 +74,15 @@ def create_velocity_gifs_mpi(
     Creates two GIFs (3D → XZ plane extraction at y=slice_y):
      1) only 2D velocity magnitude map
      2) the same map with arrows (quiver).
+     3) the same map with iso-velocity lines (contours)
     """
     frames_no_arrows = []
     frames_arrows = []
+    frames_iso       = []  # Per la terza GIF (contorni)
     
     fig_no, ax_no = plt.subplots(figsize=(6,5))
     fig_ar, ax_ar = plt.subplots(figsize=(6,5))
+    fig_iso, ax_iso = plt.subplots(figsize=(6,5))
     
     # Definisci la dimensione del quadrato
     square_size = int(0.3 * NX)
@@ -182,6 +185,59 @@ def create_velocity_gifs_mpi(
             color='white',
             scale=0.8
         )
+
+        # --- FIGURA 3: Con linee iso-velocità (contorni) ---
+        ax_iso.clear()
+        im_iso = ax_iso.imshow(
+            velocity_2d,
+            cmap='Greys',
+            origin='lower',
+            extent=(0, NX, 0, NZ),
+            vmin=0,
+            vmax=1
+        )
+        # Costruisco le coordinate in x e z in modo coerente con extent
+        x_coords = np.linspace(0, NX, velocity_2d.shape[1])
+        z_coords = np.linspace(0, NZ, velocity_2d.shape[0])
+        # Definisco i livelli di contorno (iso-velocità)
+        levels = np.linspace(0, 1, 10)
+        CS = ax_iso.contour(
+            x_coords,
+            z_coords,
+            velocity_2d,
+            levels=levels,
+            colors='red',
+            linewidths=1.5
+        )
+        # Aggiungo le etichette ai contorni
+        ax_iso.clabel(CS, inline=True, fontsize=8)
+        ax_iso.set_title(f"Step = {step}, y={slice_y} (Iso-velocity)")
+        ax_iso.set_xlabel("x")
+        ax_iso.set_ylabel("z")
+
+        # Draw the light gray square also in the figure with iso-velocity lines
+        ax_iso.add_patch(
+            plt.Rectangle(
+                (square_x0, square_z0),
+                square_size,
+                square_size,
+                color=(0.8, 0.8, 0.8),
+                alpha=0.7
+            )
+        )
+        
+        if step == steps[0]:
+            fig_iso.colorbar(im_iso, ax=ax_iso)
+            fig_iso.suptitle("Velocity field normalized to u_max (Iso-velocity lines)", fontsize=14)
+        
+        fig_iso.canvas.draw()
+        buf_iso = fig_iso.canvas.buffer_rgba()
+        image_iso = np.frombuffer(buf_iso, dtype=np.uint8)
+        image_iso = image_iso.reshape(fig_iso.canvas.get_width_height()[::-1] + (4,))
+        image_iso = image_iso[..., :3]
+        image_iso = image_iso.copy()  # Copia in memoria separata
+        
+        frames_iso.append(image_iso)
         
         fig_ar.canvas.draw()
         buf_ar = fig_ar.canvas.buffer_rgba()
@@ -210,11 +266,16 @@ def create_velocity_gifs_mpi(
     imageio.mimsave(output_gif_arrows, frames_arrows, duration=durations, loop=0)
     print(f"GIF saved (with arrows): {output_gif_arrows}")
 
+    # GIF 3 (con linee iso-velocità)
+    output_gif_iso = base + "_iso" + ext
+    imageio.mimsave(output_gif_iso, frames_iso, duration=durations, loop=0)
+    print(f"GIF saved (with iso-velocity lines): {output_gif_iso}")
+
 # Example usage
 if __name__ == "__main__":
     steps = range(0, NSTEPS, SAVE_EVERY)
-    #x_splits = get_partition_points(NX, world_size)
-    x_splits = [0, 38, 75, 113, 150, 188, 225, 263, 300]
+    x_splits = get_partition_points(NX, world_size)
+
     input_folder = "results/bin_results"
     output_gif   = "./vel_field.gif"
     
