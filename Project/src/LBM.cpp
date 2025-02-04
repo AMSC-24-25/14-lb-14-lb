@@ -62,12 +62,13 @@ namespace LatticeBoltzmannMethod{
         if (x_loc.right_pad)
             MPI_Isend(right_p, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, &request);  
         
+        //@note this is a blocking operation while the previous one is not
         if (x_loc.left_pad)
             MPI_Recv(left_p - overlap_size, overlap_size, MPI_DOUBLE, node_id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (x_loc.right_pad)
             MPI_Recv(right_p + overlap_size, overlap_size, MPI_DOUBLE, node_id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     
-
+        
         #pragma omp parallel for default(none) schedule(static)
         for (unsigned int x = x_loc.start; x < x_loc.end; ++x)
         {
@@ -138,7 +139,7 @@ namespace LatticeBoltzmannMethod{
     }
 
 
-    LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d,  double nu) : N(d), nu(nu)
+    LBM::LBM(int world_rank, int world_size, LBM::VelocitySet::StandardSet vSet, LBM::dimensions d, double nu) : N(d), nu(nu)
     {
         v = std::make_unique<VelocitySet>(vSet);
         if(N.x == 0 || N.y == 0 || N.z == 0)

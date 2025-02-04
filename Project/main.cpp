@@ -6,6 +6,7 @@
 #include <mpi.h>
 #include <chrono>
 
+//@note The following parameters could be defined as static types
 const unsigned int scale = 2;
 const unsigned int NX = 64*scale;
 const unsigned int NY = NX;
@@ -14,6 +15,12 @@ const double nu = 1.0 / 6.0;
 const unsigned int NSTEPS = 500*scale*scale + 1; 
 const unsigned int NSAVE  =  10*scale*scale;
 const unsigned int NMSG   =  50*scale*scale;
+//@note General comments:
+// 1. viene detto che il codice può funzionare aggiungendo un ostacolo ma non è mostrato nè nel report nè nel readme come fare
+// 2. alcune variabili: dimensione griglia e altri vanno cambiati nel main richiedendo una ricompilazione ogni volta: un json o un altro formato di parsing sarebbe stato apprezzato.
+// 3. Il modo in cui viene suggeritp di usare il codice è tramite un file bash che chiama cmake e make e mpirun. Per esempio seguendo queste istruzioni il codice non gira su un pc che non disponde di 8 core fisici.
+//    sarebbe stato sufficiente lasciare il cmakelist.txt e spiegare come usarlo: il file bash non serve.
+// 4. Mac non compila, Debian 12 nemmeno. Ubuntu si.
 
 namespace lb = LatticeBoltzmannMethod;
 
@@ -38,7 +45,8 @@ int main(int argc, char* argv[])
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
-    printf("Hello world from processor %s, rank %d out of %d processors\n", processor_name, world_rank, world_size);
+    //@note Why? This is not necessary nor useful
+    printf("Hello world from processor %s, rank %d out of %d processors\n", processor_name, world_rank, world_size); 
 
     //lbm object initialization
     lb::LBM::dimensions d = {NX, NY, NZ};
@@ -67,6 +75,7 @@ int main(int argc, char* argv[])
 
 
     // Write simulation parameters to CSV file
+    //@note This would be not necessary if the parameters were passed as arguments
     if (world_rank ==0){
         const double u_max = lb::Re/(6*NX);
         std::ofstream csvFile("results/simulation_parameters.csv");
